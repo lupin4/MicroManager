@@ -1,0 +1,47 @@
+# Unreal Engine folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Rider IDE files
+.idea/
+*.iml
+/shelf/
+/workspace.xml
+/projectSettingsUpdater.xml
+/.idea.ExtendEditor.iml
+/modules.xml
+/contentModel.xml
+
+# Editor-based HTTP Client requests
+/httpRequests/
+
+# Datasource local storage
+/dataSources/
+dataSources.local.xml
+
+# OS and backup junk
+*.log
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
+
+# Compiled binaries
+*.dll
+*.exe
+*.pdb
+*.lib
+*.app
+*.dylib
+*.ipa
+*.ipch
+*.obj
+*.o
+*.so
+
+# Swap/backup files
+*.swp
+*~.*

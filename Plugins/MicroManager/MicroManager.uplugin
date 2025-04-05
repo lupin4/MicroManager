@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "MicroManager",
+	"Description": "Tools to help.",
+	"Category": "Other",
+	"CreatedBy": "David Clabaugh",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "MicroManager",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault"
+		}
+	]
+}
