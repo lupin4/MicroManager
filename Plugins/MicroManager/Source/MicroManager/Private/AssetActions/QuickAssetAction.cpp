@@ -108,7 +108,7 @@ void UQuickAssetAction::RemoveUnusedAssets()
     for (const FAssetData& SelectedAssetData : SelectedAssetsData)
     {
         TArray<FString> AssetReferencers =
-        UEditorAssetLibrary::FindPackageReferencersForAsset(SelectedAssetData.ObjectPath.ToString());
+        UEditorAssetLibrary::FindPackageReferencersForAsset(SelectedAssetData.GetObjectPathString());
         if (AssetReferencers.Num() == 0)
         {
             UnusedAssetsData.Add(SelectedAssetData);
@@ -147,7 +147,8 @@ void UQuickAssetAction::FixUpRedirectors()
     FARFilter Filter;
     Filter.bRecursivePaths = true;
     Filter.PackagePaths.Emplace("/Game");
-    Filter.ClassNames.Emplace("ObjectRedirector");
+	Filter.ClassPaths.Emplace(FTopLevelAssetPath(TEXT("/Script/Engine"), TEXT("ObjectRedirector")));
+
 
     TArray<FAssetData> OutRedirectors;
 

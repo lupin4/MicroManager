@@ -30,6 +30,7 @@ public class MicroManager : ModuleRules
 				"Slate", "SlateCore", "UMG", "Niagara", "CinematicCamera", "MovieScene",
 				"MovieSceneTracks", "LevelSequence","AssetRegistry",
 				"AssetTools",
+				"ContentBrowser"
 			}
 		);
 
