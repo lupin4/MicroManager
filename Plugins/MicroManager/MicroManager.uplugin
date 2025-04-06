@@ -18,7 +18,20 @@
 		{
 			"Name": "MicroManager",
 			"Type": "Editor",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"Core",
+				"CoreUObject",
+				"Engine",
+				"EditorScriptingUtilities"
+			]
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "EditorScriptingUtilities",
+			"Enabled": true
 		}
 	]
 }
+

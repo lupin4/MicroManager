@@ -26,7 +26,10 @@ public class MicroManager : ModuleRules
 				"Engine",
 				"UnrealEd", // Required for editor functionalities
 				"Blutility",
-				"EditorScriptingUtilities"// Required for Blueprint utility classes
+				"EditorScriptingUtilities",// Required for Blueprint utility classes
+				"Slate", "SlateCore", "UMG", "Niagara", "CinematicCamera", "MovieScene",
+				"MovieSceneTracks", "LevelSequence","AssetRegistry",
+				"AssetTools",
 			}
 		);
 
