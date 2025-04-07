@@ -21,11 +21,27 @@ private:
 	// Define the menu extension here.
 	void InitCBMenuExtension();
 
+	TArray<FString> FolderPathsSelected;
+
 	TSharedRef<FExtender> CustomBBMenuExtender(const TArray<FString>& SelectedPaths);
 
 	void AddCBMenuEntry(FMenuBuilder& MenuBuilder);
 
 	void OnDeleteUnusedAssetsButtonClicked();
+
+	void FixUpRedirectors();
+
+	void OnDeleteUnusedFoldersButtonClicked();
+
+	void OnMicroManagerClicked();
+
+#pragma endregion
+
+#pragma region CustomEditorTab
+
+	void RegisterMicroManagerTab();
+
+	TSharedRef<SDockTab> OnSpawnMicroManagerTab(const FSpawnTabArgs&);
 
 #pragma endregion
 };

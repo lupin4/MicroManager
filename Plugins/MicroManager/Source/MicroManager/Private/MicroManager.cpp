@@ -1,7 +1,14 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "MicroManager.h"
+
+#include "AssetToolsModule.h"
 #include "ContentBrowserModule.h"
+#include "DebugHelper.h"
+#include "EditorAssetLibrary.h"
+#include "ObjectTools.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+
 
 #define LOCTEXT_NAMESPACE "FMicroManagerModule"
 
@@ -12,6 +19,7 @@ void FMicroManagerModule::StartupModule()
 
     // Register the menu extension.
     InitCBMenuExtension();
+	RegisterMicroManagerTab();
 }
 
 // This function registers the menu extension. It will be called when the module is initialized.
@@ -44,8 +52,12 @@ void FMicroManagerModule::InitCBMenuExtension()
 	
 }
 
+
+// First Binding for the menu item.
+//Define the position of the menu item in the context menu.
 TSharedRef<FExtender> FMicroManagerModule::CustomBBMenuExtender(const TArray<FString>& SelectedPaths)
 {
+	// Grabbing a TSharedRef of the FExtender.
 	TSharedRef<FExtender> MenuExtender(MakeShareable(new FExtender));
 
 	if (SelectedPaths.Num() > 0)
@@ -54,35 +66,247 @@ TSharedRef<FExtender> FMicroManagerModule::CustomBBMenuExtender(const TArray<FSt
 		// Create a new menu item.
 		// The menu item will be added to the context menu for paths.
         // Here we are adding a new menu item to the Content Browser's Path View context menu. Using A delegate to define the menu item's behavior.
-		MenuExtender->AddMenuExtension(FName("Delete"),
-			EExtensionHook::After,
-			TSharedPtr<FUICommandList>(),
-			FMenuExtensionDelegate::CreateRaw(this, &FMicroManagerModule::AddCBMenuEntry)
+		MenuExtender->AddMenuExtension(FName("Delete"), // Extension Hook
+			EExtensionHook::After, // Hook position
+			TSharedPtr<FUICommandList>(), // Custom Hot Keys
+			FMenuExtensionDelegate::CreateRaw(this, &FMicroManagerModule::AddCBMenuEntry) // Second binding will determine this menus title, and tooltip
 			);
+		FolderPathsSelected = SelectedPaths; // Store the selected paths for future use.
 	}
 	return MenuExtender;
 }
 
 
 // Second Binding for the menu item.
+//Define the details of the custom Menu Entry 
 void FMicroManagerModule::AddCBMenuEntry(FMenuBuilder& MenuBuilder)
 {
+	// Top separator
+	MenuBuilder.AddMenuSeparator();
+
+	// Delete Unused Assets
 	MenuBuilder.AddMenuEntry(
 		FText::FromString(TEXT("Delete Unused Assets")),
-		FText::FromString(TEXT("Safely Delete all unused assets in the directory.")),
+		FText::FromString(TEXT("Safely delete all unused assets in the directory.")),
 		FSlateIcon(),
 		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnDeleteUnusedAssetsButtonClicked)
 	);
+
+	// Delete Empty Folders
+	MenuBuilder.AddMenuEntry(
+		FText::FromString(TEXT("Delete Empty Folders")),
+		FText::FromString(TEXT("Safely delete all empty folders in the directory.")),
+		FSlateIcon(),
+		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnDeleteUnusedFoldersButtonClicked)
+	);
+
+	// Launch Micro Manager
+	MenuBuilder.AddMenuEntry(
+		FText::FromString(TEXT("Launch Micro Manager")),
+		FText::FromString(TEXT("Opens the Micro Manager tool window.")),
+		FSlateIcon(),
+		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnMicroManagerClicked)
+	);
+
+	// Bottom separator
+	MenuBuilder.AddMenuSeparator();
 }
 
 
+
+
+// Called when the user clicks the "Delete Unused Assets" menu item.
 void FMicroManagerModule::OnDeleteUnusedAssetsButtonClicked()
 {
-    // Your code goes here.
+	// DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("Successfully removed all unused files"));
+	if (FolderPathsSelected.Num() > 1)
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("You can only do this with one directory selected."));
+		return;
+	}
+	// DebugHelper::Print(TEXT("Selected folder: ") + FolderPathsSelected[0], FColor::Cyan);
+
+	TArray<FString> AssetPathsNames = UEditorAssetLibrary::ListAssets(FolderPathsSelected[0]);
+
+	if (AssetPathsNames.Num() == 0)
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No assets found under the selected folder"));
+		return;
+	}
+
+	EAppReturnType::Type ConfirmedResult =
+		DebugHelper::ShowMsgDialog(EAppMsgType::YesNo,
+								   FString::Printf(TEXT("A Total of %d Assets to be confirmed for deletion.\nDo you want to delete them?"),
+								   AssetPathsNames.Num()), false);
+
+	if (ConfirmedResult == EAppReturnType::No)
+	{
+		return;
+	}
+
+
+	FixUpRedirectors();
+	
+	TArray<FAssetData> UnusedAssetsData;
+
+	for (const FString& AssetPathName : AssetPathsNames)
+	{
+		// Don't touch root folder
+		//Excludes these folders from the delete process
+		if (AssetPathName.Contains(TEXT("Developers")) ||
+			AssetPathName.Contains(TEXT("Collections")) ||
+			AssetPathName.Contains(TEXT("_ExternalActors_"))||
+			AssetPathName.Contains(TEXT("_ExternalObjects_"))||
+			AssetPathName.Contains(TEXT("Maps")))
+		{
+			continue;
+		}
+
+		if (!UEditorAssetLibrary::DoesAssetExist(AssetPathName))
+		{
+			continue;
+		}
+
+		TArray<FString> AssetReferencers = UEditorAssetLibrary::FindPackageReferencersForAsset(AssetPathName);
+
+		if (AssetReferencers.Num() == 0)
+		{
+			const FAssetData UnusedAssetData = UEditorAssetLibrary::FindAssetData(AssetPathName);
+			UnusedAssetsData.Add(UnusedAssetData);
+		}
+	}
+
+	if (UnusedAssetsData.Num() > 0)
+	{
+		ObjectTools::DeleteAssets(UnusedAssetsData);
+	}
+	else
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No unused asset found under the selected folder"), false);
+	}
+}
+
+/**
+ * @brief Deletes all empty folders within the selected directory.
+ * 
+ * This function identifies and deletes all empty folders within the directory specified by the user.
+ * It excludes certain folders from deletion and prompts the user for confirmation before proceeding.
+ */
+void FMicroManagerModule::OnDeleteUnusedFoldersButtonClicked()
+{
+    TArray<FString> FolderPathsArray = UEditorAssetLibrary::ListAssets(FolderPathsSelected[0], true, true);
+    uint32 Counter = 0;
+
+    FString EmptyFolderPathNames;
+    TArray<FString> EmptyFoldersPathsArrray;
+    for (const FString& FolderPath : FolderPathsArray)
+    {
+        if (FolderPath.Contains(TEXT("Developers")) ||
+            FolderPath.Contains(TEXT("Collections")) ||
+            FolderPath.Contains(TEXT("_ExternalActors_"))||
+            FolderPath.Contains(TEXT("_ExternalObjects_"))||
+            FolderPath.Contains(TEXT("Maps")))
+        {
+            continue;
+        }
+        // Checks if the selected path is a directory
+        if (!UEditorAssetLibrary::DoesDirectoryExist(FolderPath)) continue;
+        if (!UEditorAssetLibrary::DoesDirectoryHaveAssets(FolderPath))
+        {
+            EmptyFolderPathNames.Append(FolderPath);
+            EmptyFolderPathNames.Append(TEXT("\n"));
+
+            EmptyFoldersPathsArrray.Add(FolderPath);
+        };
+        
+    }
+    
+    if (EmptyFoldersPathsArrray.Num() == 0)
+    {
+        DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No empty folders found under the selected folder"));
+        
+    }
+    EAppReturnType::Type ConfirmedResult =
+    DebugHelper::ShowMsgDialog(EAppMsgType::OkCancel, TEXT("Empty Folders found in:\n") + EmptyFolderPathNames + TEXT("\nWould you like to Delete them all?"), false);
+
+    if (ConfirmedResult == EAppReturnType::Cancel) return;
+
+    for (const FString& EmptyFolderPath : EmptyFoldersPathsArrray)
+    {
+        // Deletes the empty folder recursively.
+        //
+        UEditorAssetLibrary::DeleteDirectory(EmptyFolderPath)?
+            ++Counter : DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("Failed to delete folder: ") + EmptyFolderPath);
+    }
+
+	if (Counter > 0)
+	{
+		DebugHelper::ShowNotifyInfo(TEXT("Successfully Deleted ") + FString::FromInt(Counter) + TEXT(" Empty Folders"));
+	}
+        
 };
+
+
+
+void FMicroManagerModule::FixUpRedirectors()
+{
+
+	TArray<UObjectRedirector*> RedirectorsToFixArray;
+	FAssetRegistryModule& AssetRegistryModule =
+	FModuleManager::Get().LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+
+	FARFilter Filter;
+	Filter.bRecursivePaths = true;
+	Filter.PackagePaths.Emplace("/Game");
+	Filter.ClassPaths.Emplace(FTopLevelAssetPath(TEXT("/Script/Engine"), TEXT("ObjectRedirector")));
+
+	TArray<FAssetData> OutRedirectors;
+	AssetRegistryModule.Get().GetAssets(Filter,OutRedirectors);
+
+	for(const FAssetData& RedirectorData:OutRedirectors)
+	{
+		if(UObjectRedirector* RedirectorToFix = Cast<UObjectRedirector>(RedirectorData.GetAsset()))
+		{
+			RedirectorsToFixArray.Add(RedirectorToFix);
+		}
+	}
+
+	FAssetToolsModule& AssetToolsModule =
+	FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+
+	AssetToolsModule.Get().FixupReferencers(RedirectorsToFixArray);
+}
+
+
+
 
 #pragma endregion
 
+
+
+#pragma region CustomEditorTab
+
+void FMicroManagerModule::OnMicroManagerClicked()
+{
+	DebugHelper::Print(TEXT("Micro Manager clicked"), FColor::Cyan);
+	FGlobalTabmanager::Get()->TryInvokeTab(FName("Micro Manager"));
+}
+
+void FMicroManagerModule::RegisterMicroManagerTab()
+{
+
+	FGlobalTabmanager::Get()->RegisterTabSpawner(FName("Micro Manager"),FOnSpawnTab::CreateRaw(this, &FMicroManagerModule::OnSpawnMicroManagerTab)).SetDisplayName(FText::FromString(TEXT("MicroManager")));
+	
+}
+
+TSharedRef<SDockTab> FMicroManagerModule::OnSpawnMicroManagerTab(const FSpawnTabArgs&)
+{
+	return
+	SNew(SDockTab).TabRole(ETabRole::NomadTab);
+}
+
+
+#pragma endregion
 void FMicroManagerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,

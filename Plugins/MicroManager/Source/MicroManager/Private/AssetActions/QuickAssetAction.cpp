@@ -13,7 +13,7 @@ void UQuickAssetAction::DuplicateAssets(int32 NumOfDuplicates)
 {
 	if(NumOfDuplicates<=0)
 	{
-		ShowMsgDialog(EAppMsgType::Ok,TEXT("Please enter a VALID number"));
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok,TEXT("Please enter a VALID number"));
 		return;
 	}
 
@@ -38,7 +38,7 @@ void UQuickAssetAction::DuplicateAssets(int32 NumOfDuplicates)
 
 	if(Counter>0)
 	{	
-		ShowNotifyInfo(TEXT("Successfully duplicated " + FString::FromInt(Counter) + " files"));
+		DebugHelper::ShowNotifyInfo(TEXT("Successfully duplicated " + FString::FromInt(Counter) + " files"));
 		/*Print(TEXT("Successfully duplicated " + FString::FromInt(Counter) + " files"),FColor::Green);*/
 	}
 }
@@ -64,14 +64,14 @@ void UQuickAssetAction::AddPrefixes()
 
 		if (!PrefixFound || PrefixFound->IsEmpty())
 		{
-			Print(TEXT("No prefix found for " + SelectedObject->GetName()), FColor::Red);
+			DebugHelper::Print(TEXT("No prefix found for " + SelectedObject->GetName()), FColor::Red);
 			continue;
 		}
 
 		FString OldName = SelectedObject->GetName();
 		if (OldName.StartsWith(*PrefixFound))
 		{
-			Print(TEXT("Name already starts with prefix " + SelectedObject->GetName()), FColor::Yellow);
+			DebugHelper::Print(TEXT("Name already starts with prefix " + SelectedObject->GetName()), FColor::Yellow);
 			continue;
 		}
 		if (SelectedObject->IsA<UMaterialInstanceConstant>())
@@ -87,7 +87,7 @@ void UQuickAssetAction::AddPrefixes()
 		Counter++;
 	}
 
-	ShowNotifyInfo(TEXT("Successfully added prefixes to " + FString::FromInt(Counter) + " files"));
+	DebugHelper::ShowNotifyInfo(TEXT("Successfully added prefixes to " + FString::FromInt(Counter) + " files"));
 }
 
 /**
@@ -116,14 +116,14 @@ void UQuickAssetAction::RemoveUnusedAssets()
     }
     if (UnusedAssetsData.Num() == 0)
     {
-        ShowMsgDialog(EAppMsgType::Ok, TEXT("No unused assets found"));
+        DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No unused assets found"));
         return;	
     }
     const int32 NumOfAssetsDeleted = ObjectTools::DeleteAssets(UnusedAssetsData);
 
     if (NumOfAssetsDeleted == 0)return;
     
-    ShowMsgDialog(EAppMsgType::Ok,TEXT("Successfully removed " + FString::FromInt(NumOfAssetsDeleted) + " unused files"));
+    DebugHelper::ShowMsgDialog(EAppMsgType::Ok,TEXT("Successfully removed " + FString::FromInt(NumOfAssetsDeleted) + " unused files"));
     
 }
 
