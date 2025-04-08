@@ -45,3 +45,11 @@ Thumbs.db
 # Swap/backup files
 *.swp
 *~.*
+
+# Unreal asset files
+*.uasset
+*.umap
+
+# Allow the specific Editor Utility Blueprint used by the MicroManager plugin
+!Plugins/MicroManager/Content/EUBP_QuickAssetActions.uasset
+
