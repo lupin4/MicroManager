@@ -8,7 +8,7 @@
 #include "EditorAssetLibrary.h"
 #include "ObjectTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-
+#include "SlateWidgets/MicroManagerWidget.h"
 
 #define LOCTEXT_NAMESPACE "FMicroManagerModule"
 
@@ -16,14 +16,14 @@ void FMicroManagerModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	// settings.
-
     // Register the menu extension.
     InitCBMenuExtension();
 	RegisterMicroManagerTab();
 }
 
-// This function registers the menu extension. It will be called when the module is initialized.
 #pragma region ContentBrowserMenuExtension
+
+// This function registers the menu extension. It will be called when the module is initialized.
 void FMicroManagerModule::InitCBMenuExtension()
 {
 	// Get the Content Browser module.
@@ -48,10 +48,7 @@ void FMicroManagerModule::InitCBMenuExtension()
 
 	ContentBrowserModuleMenuExtenders.Add(FContentBrowserMenuExtender_SelectedPaths::CreateRaw(this, &FMicroManagerModule::CustomBBMenuExtender));
 	
-
-	
 }
-
 
 // First Binding for the menu item.
 //Define the position of the menu item in the context menu.
@@ -62,7 +59,6 @@ TSharedRef<FExtender> FMicroManagerModule::CustomBBMenuExtender(const TArray<FSt
 
 	if (SelectedPaths.Num() > 0)
 	{
-
 		// Create a new menu item.
 		// The menu item will be added to the context menu for paths.
         // Here we are adding a new menu item to the Content Browser's Path View context menu. Using A delegate to define the menu item's behavior.
@@ -113,8 +109,6 @@ void FMicroManagerModule::AddCBMenuEntry(FMenuBuilder& MenuBuilder)
 }
 
 
-
-
 // Called when the user clicks the "Delete Unused Assets" menu item.
 void FMicroManagerModule::OnDeleteUnusedAssetsButtonClicked()
 {
@@ -143,8 +137,7 @@ void FMicroManagerModule::OnDeleteUnusedAssetsButtonClicked()
 	{
 		return;
 	}
-
-
+	
 	FixUpRedirectors();
 	
 	TArray<FAssetData> UnusedAssetsData;
@@ -197,8 +190,11 @@ void FMicroManagerModule::OnDeleteUnusedFoldersButtonClicked()
     TArray<FString> FolderPathsArray = UEditorAssetLibrary::ListAssets(FolderPathsSelected[0], true, true);
     uint32 Counter = 0;
 
+	// Create a Variable to hold the names of the empty folders
     FString EmptyFolderPathNames;
+	// Create a Variable to hold the paths of the empty folders
     TArray<FString> EmptyFoldersPathsArrray;
+	// Iterates through all the folders in the selected directory
     for (const FString& FolderPath : FolderPathsArray)
     {
         if (FolderPath.Contains(TEXT("Developers")) ||
@@ -246,7 +242,11 @@ void FMicroManagerModule::OnDeleteUnusedFoldersButtonClicked()
         
 };
 
-
+void FMicroManagerModule::OnMicroManagerClicked()
+{
+	DebugHelper::Print(TEXT("Micro Manager clicked"), FColor::Cyan);
+	FGlobalTabmanager::Get()->TryInvokeTab(FName("Micro Manager"));
+}
 
 void FMicroManagerModule::FixUpRedirectors()
 {
@@ -277,33 +277,63 @@ void FMicroManagerModule::FixUpRedirectors()
 	AssetToolsModule.Get().FixupReferencers(RedirectorsToFixArray);
 }
 
-
-
-
 #pragma endregion
-
-
 
 #pragma region CustomEditorTab
 
-void FMicroManagerModule::OnMicroManagerClicked()
-{
-	DebugHelper::Print(TEXT("Micro Manager clicked"), FColor::Cyan);
-	FGlobalTabmanager::Get()->TryInvokeTab(FName("Micro Manager"));
-}
-
 void FMicroManagerModule::RegisterMicroManagerTab()
 {
-
+	// Register the custom editor tab
 	FGlobalTabmanager::Get()->RegisterTabSpawner(FName("Micro Manager"),FOnSpawnTab::CreateRaw(this, &FMicroManagerModule::OnSpawnMicroManagerTab)).SetDisplayName(FText::FromString(TEXT("MicroManager")));
-	
 }
 
-TSharedRef<SDockTab> FMicroManagerModule::OnSpawnMicroManagerTab(const FSpawnTabArgs&)
+TSharedRef<SDockTab> FMicroManagerModule::OnSpawnMicroManagerTab(const FSpawnTabArgs& SpawnTabArgs)
 {
 	return
-	SNew(SDockTab).TabRole(ETabRole::NomadTab);
+	SNew(SDockTab).TabRole(ETabRole::NomadTab)
+	[
+		SNew(SMicroManagerTab)
+		.AssetsDataArray(GetAllAssetDataUnderSelectedFolders())
+		
+	];
 }
+
+TArray<TSharedPtr<FAssetData>> FMicroManagerModule::GetAllAssetDataUnderSelectedFolders()
+{
+	TArray<TSharedPtr<FAssetData>> AvailableAssetsData;
+
+	// Get all asset paths under the selected folder
+	TArray<FString> AssetPathNames = UEditorAssetLibrary::ListAssets(FolderPathsSelected[0]);
+
+	for (const FString& AssetPath : AssetPathNames)
+	{
+		// ✅ Check the actual AssetPath here, not the full array
+		if (AssetPath.Contains(TEXT("Developers")) ||
+			AssetPath.Contains(TEXT("Collections")) ||
+			AssetPath.Contains(TEXT("_ExternalActors_")) ||
+			AssetPath.Contains(TEXT("_ExternalObjects_")) ||
+			AssetPath.Contains(TEXT("Maps")))
+		{
+			continue;
+		}
+
+		if (!UEditorAssetLibrary::DoesAssetExist(AssetPath))
+		{
+			continue;
+		}
+
+		const FAssetData Data = UEditorAssetLibrary::FindAssetData(AssetPath);
+		if (Data.IsValid())
+		{
+			AvailableAssetsData.Add(MakeShared<FAssetData>(Data));
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Collected %d assets."), AvailableAssetsData.Num());
+
+	return AvailableAssetsData;
+}
+
 
 
 #pragma endregion

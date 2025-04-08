@@ -41,7 +41,9 @@ private:
 
 	void RegisterMicroManagerTab();
 
-	TSharedRef<SDockTab> OnSpawnMicroManagerTab(const FSpawnTabArgs&);
+	TSharedRef<SDockTab> OnSpawnMicroManagerTab(const FSpawnTabArgs& SpawnTabArgs);
+
+	TArray<TSharedPtr<FAssetData>> GetAllAssetDataUnderSelectedFolders();;
 
 #pragma endregion
 };
