@@ -34,4 +34,10 @@ private:
 
 	// Callback for checkbox state change
 	void OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) const;
+
+	// Helper function to construct a styled text block for asset class
+	TSharedRef<STextBlock> ConstructTextForRowWidget(const FString& TextContent, const FSlateFontInfo FontToUse) const;
+
+	// Helper for consistent font access
+	FSlateFontInfo GetEmbossedTextFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); }
 };

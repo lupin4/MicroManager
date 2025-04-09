@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "SlateWidgets/MicroManagerWidget.h"
 #include "SlateBasics.h"
 #include "DebugHelper.h"
@@ -28,10 +26,9 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 	// Build the widget layout
 	ChildSlot
 	[
-		// Main vertical Box to hold all the widgets
 		SNew(SVerticalBox)
 
-		// First Vertical for Title Text
+		// Title Text
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
@@ -42,16 +39,16 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 			.ColorAndOpacity(FSlateColor(FLinearColor::White))
 		]
 
-		// Second Vertical Slot for Dropdown Menu (placeholder)
+		// Placeholder Dropdown
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
 			SNew(SHorizontalBox)
 		]
 
-		// Third Vertical Slot for Asset List
+		// Asset List
 		+ SVerticalBox::Slot()
-		.FillHeight(1.0f) // Make sure list view has space to show
+		.FillHeight(1.0f)
 		[
 			SNew(SListView<TSharedPtr<FAssetData>>)
 			.ItemHeight(24.f)
@@ -60,24 +57,33 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 			.SelectionMode(ESelectionMode::Single)
 		]
 
-		// Fourth Vertical Slot for Buttons (placeholder)
+		// Placeholder Buttons
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
 			SNew(SHorizontalBox)
+			+ SHorizontalBox::Slot()
+			[
+				SNew(STextBlock)
+				.Text(FText::FromString(TEXT("Button Placeholder")))
+			]
 		]
 	];
 }
 
-// Callback function for generating each row in the asset list
 TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	TSharedPtr<FAssetData> AssetDataToDisplay,
 	const TSharedRef<STableViewBase>& OwnerTable) const
 {
-	// Fallback text if the asset is invalid
+	const FString DisplayAssetClassName = AssetDataToDisplay->AssetClassPath.GetAssetName().ToString();
 	FString DisplayAssetName = TEXT("[Invalid Asset]");
 
-	// If asset is valid, extract its name for display
+	FSlateFontInfo AssetClassNameFont = GetEmbossedTextFont();
+	AssetClassNameFont.Size = 10;
+
+	FSlateFontInfo AssetNameFont = GetEmbossedTextFont();
+	AssetNameFont.Size = 15;
+
 	if (AssetDataToDisplay.IsValid())
 	{
 		DisplayAssetName = AssetDataToDisplay->AssetName.ToString();
@@ -85,12 +91,11 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 
 	DebugHelper::PrintLog(FString::Printf(TEXT("Generating row for: %s"), *DisplayAssetName));
 
-	// Create a horizontal layout for each row: Checkbox + Asset Name
 	return SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable)
 	[
 		SNew(SHorizontalBox)
 
-		// First slot for checkbox
+		// First Slot for Checkbox
 		+ SHorizontalBox::Slot()
 		.HAlign(HAlign_Left)
 		.VAlign(VAlign_Center)
@@ -99,36 +104,41 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 			ConstructCheckBox(AssetDataToDisplay)
 		]
 
-		// Second slot for asset name
+		// Second Slot for Asset Class Name
+		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Fill)
+		.FillWidth(0.2f)
+		[
+			ConstructTextForRowWidget(DisplayAssetClassName, AssetClassNameFont)
+		]
+
+		// Third slot for Asset Name
 		+ SHorizontalBox::Slot()
 		[
-			SNew(STextBlock)
-			.Text(FText::FromString(DisplayAssetName))
+			ConstructTextForRowWidget(DisplayAssetName, AssetNameFont)
 		]
+
+		//Fourth slot for Buttons
 	];
 }
 
-// Helper function to construct a checkbox widget for each asset
 TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay) const
 {
-	// Create the checkbox and bind the change handler
 	return SNew(SCheckBox)
 		.Type(ESlateCheckBoxType::CheckBox)
 		.OnCheckStateChanged(this, &SMicroManagerTab::OnCheckBoxStateChanged, AssetDataToDisplay)
 		.Visibility(EVisibility::Visible);
 }
 
-// Handler for when a checkbox is clicked
 void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) const
 {
-	// Ensure the asset is valid before reacting
 	if (!AssetData.IsValid())
 	{
 		DebugHelper::PrintLog(TEXT("Checkbox state changed for invalid asset"));
 		return;
 	}
 
-	// Print the checkbox state to screen
 	switch (NewState)
 	{
 	case ECheckBoxState::Unchecked:
@@ -142,4 +152,12 @@ void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPt
 	default:
 		break;
 	}
+}
+
+TSharedRef<STextBlock> SMicroManagerTab::ConstructTextForRowWidget(const FString& TextContent, const FSlateFontInfo FontToUse) const
+{
+	return SNew(STextBlock)
+		.Text(FText::FromString(TextContent))
+		.Font(FontToUse)
+		.ColorAndOpacity(FSlateColor(FColor::White));
 }
