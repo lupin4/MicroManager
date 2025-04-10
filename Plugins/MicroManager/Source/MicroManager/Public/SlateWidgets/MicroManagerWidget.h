@@ -23,11 +23,18 @@ private:
 	// The array of asset data displayed in the list view
 	TArray<TSharedPtr<FAssetData>> StoredAssetsData;
 
-	// Called by the SListView to generate one row per asset
+	TSharedRef<SListView<TSharedPtr<FAssetData>>> ConstructAssetListView();
+
+	TSharedPtr<SListView<TSharedPtr<FAssetData>>> ConstructedAssetListView;
+
+	// Refresh the list view
+	void RefreshAssetListView();
+
+	// Called by the SListView to generate one row per asset (non-const)
 	TSharedRef<ITableRow> OnGenerateRowForList(
 		TSharedPtr<FAssetData> AssetDataToDisplay,
 		const TSharedRef<STableViewBase>& OwnerTable
-	) const;
+	);
 
 	// Builds a checkbox widget per row
 	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay) const;
@@ -37,6 +44,12 @@ private:
 
 	// Helper function to construct a styled text block for asset class
 	TSharedRef<STextBlock> ConstructTextForRowWidget(const FString& TextContent, const FSlateFontInfo FontToUse) const;
+
+	// Button Constructor
+	TSharedRef<SButton> ConstructButtonForRowWidget(TSharedPtr<FAssetData>& AssetDataToDisplay);
+
+	// Click Handler for the delete button
+	FReply OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData);
 
 	// Helper for consistent font access
 	FSlateFontInfo GetEmbossedTextFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); }

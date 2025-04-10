@@ -337,6 +337,31 @@ TArray<TSharedPtr<FAssetData>> FMicroManagerModule::GetAllAssetDataUnderSelected
 
 
 #pragma endregion
+
+
+
+#pragma region ProcessDataForMicromanager
+
+
+bool FMicroManagerModule::DeleteSingleAssetForAssetList(const FAssetData& AssetDataToDelete)
+{
+	// Creates an aray to pass data to the delete function
+	
+	TArray<FAssetData> AssetsDataArrayForDeletion;
+	// Adds the asset to be deleted to the array
+	AssetsDataArrayForDeletion.Add(AssetDataToDelete);
+	// Deletes the asset from the content browser using the ObjectTools module
+	if (ObjectTools::DeleteAssets(AssetsDataArrayForDeletion) > 0)
+	{
+		return true;
+	};
+	return false;
+}
+
+#pragma endregion
+
+
+
 void FMicroManagerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,

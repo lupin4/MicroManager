@@ -1,6 +1,7 @@
 #include "SlateWidgets/MicroManagerWidget.h"
 #include "SlateBasics.h"
 #include "DebugHelper.h"
+#include "MicroManager.h"
 
 void SMicroManagerTab::Construct(const FArguments& InArgs)
 {
@@ -48,13 +49,13 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 
 		// Asset List
 		+ SVerticalBox::Slot()
-		.FillHeight(1.0f)
+		.VAlign(VAlign_Fill)
 		[
-			SNew(SListView<TSharedPtr<FAssetData>>)
-			.ItemHeight(24.f)
-			.ListItemsSource(&StoredAssetsData)
-			.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList)
-			.SelectionMode(ESelectionMode::Single)
+			SNew(SScrollBox)
+			+ SScrollBox::Slot()
+			[
+				ConstructAssetListView()
+			]
 		]
 
 		// Placeholder Buttons
@@ -71,9 +72,18 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 	];
 }
 
+TSharedRef<SListView<TSharedPtr<FAssetData>>> SMicroManagerTab::ConstructAssetListView()
+{
+	ConstructedAssetListView = SNew(SListView<TSharedPtr<FAssetData>>)
+		.ItemHeight(24.f)
+		.ListItemsSource(&StoredAssetsData)
+		.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList);
+	return ConstructedAssetListView.ToSharedRef();
+}
+
 TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	TSharedPtr<FAssetData> AssetDataToDisplay,
-	const TSharedRef<STableViewBase>& OwnerTable) const
+	const TSharedRef<STableViewBase>& OwnerTable)
 {
 	const FString DisplayAssetClassName = AssetDataToDisplay->AssetClassPath.GetAssetName().ToString();
 	FString DisplayAssetName = TEXT("[Invalid Asset]");
@@ -91,7 +101,7 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 
 	DebugHelper::PrintLog(FString::Printf(TEXT("Generating row for: %s"), *DisplayAssetName));
 
-	return SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable)
+	return SNew(STableRow<TSharedPtr<FAssetData>>, OwnerTable).Padding(FMargin(2.0f))
 	[
 		SNew(SHorizontalBox)
 
@@ -108,18 +118,26 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 		+ SHorizontalBox::Slot()
 		.HAlign(HAlign_Center)
 		.VAlign(VAlign_Fill)
-		.FillWidth(0.2f)
+		.FillWidth(0.5f)
 		[
 			ConstructTextForRowWidget(DisplayAssetClassName, AssetClassNameFont)
 		]
 
 		// Third slot for Asset Name
 		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Left)
+		.VAlign(VAlign_Fill)
 		[
 			ConstructTextForRowWidget(DisplayAssetName, AssetNameFont)
 		]
 
-		//Fourth slot for Buttons
+		// Fourth slot for Buttons
+		+ SHorizontalBox::Slot()
+		.HAlign(HAlign_Right)
+		.VAlign(VAlign_Fill)
+		[
+			ConstructButtonForRowWidget(AssetDataToDisplay)
+		]
 	];
 }
 
@@ -160,4 +178,49 @@ TSharedRef<STextBlock> SMicroManagerTab::ConstructTextForRowWidget(const FString
 		.Text(FText::FromString(TextContent))
 		.Font(FontToUse)
 		.ColorAndOpacity(FSlateColor(FColor::White));
+}
+
+// Helper function to construct a delete button for each asset row
+TSharedRef<SButton> SMicroManagerTab::ConstructButtonForRowWidget(TSharedPtr<FAssetData>& AssetDataToDisplay)
+{
+	TSharedRef<SButton> ConstructedButton = SNew(SButton)
+		.Text(FText::FromString(TEXT("Delete")))
+		.OnClicked(this, &SMicroManagerTab::OnDeleteButtonClicked, AssetDataToDisplay);
+	return ConstructedButton;
+}
+
+// Callback for the delete button click event
+FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData)
+{
+	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
+
+	// Call the custom function to delete the clicked asset
+	// The TSharedPtr<FAssetData> assetData is passed to the custom function and converted to a raw pointer for deletion
+	const bool bAssetDeleted = MicroManagerModule.DeleteSingleAssetForAssetList(*ClickedAssetData.Get());
+
+	// Refresh the asset list to reflect the deletion
+	if (bAssetDeleted)
+	{
+		// Update list source items
+		if (StoredAssetsData.Contains(ClickedAssetData))
+		{
+			StoredAssetsData.Remove(ClickedAssetData);
+			DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset: %s"), *ClickedAssetData->AssetName.ToString()));
+		}
+		
+		ConstructedAssetListView->RequestListRefresh();
+
+		DebugHelper::ShowNotifyInfo(FString::Printf(TEXT("Deleted asset: %s"), *ClickedAssetData->AssetName.ToString()));
+	}
+
+	return FReply::Handled();
+}
+
+void SMicroManagerTab::RefreshAssetListView()
+{
+	if (ConstructedAssetListView.IsValid())
+	{
+		ConstructedAssetListView->RebuildList();
+		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
+	}
 }
