@@ -64,9 +64,25 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 		[
 			SNew(SHorizontalBox)
 			+ SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
 			[
-				SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Button Placeholder")))
+				ConstructDeleteAllButton()
+				
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
+			[
+				ConstructSelectAllButton()
+				
+			]
+			+ SHorizontalBox::Slot()
+			.FillWidth(10.f)
+			.Padding(5.f)
+			[
+				ConstructDeselectAllButton()
+				
 			]
 		]
 	];
@@ -80,6 +96,17 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> SMicroManagerTab::ConstructAssetLi
 		.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList);
 	return ConstructedAssetListView.ToSharedRef();
 }
+
+void SMicroManagerTab::RefreshAssetListView()
+{
+	if (ConstructedAssetListView.IsValid())
+	{
+		ConstructedAssetListView->RebuildList();
+		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
+	}
+}
+
+#pragma region RowWidgetForAssetListView
 
 TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	TSharedPtr<FAssetData> AssetDataToDisplay,
@@ -141,7 +168,7 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	];
 }
 
-TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay) const
+TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay)
 {
 	return SNew(SCheckBox)
 		.Type(ESlateCheckBoxType::CheckBox)
@@ -149,7 +176,7 @@ TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAsse
 		.Visibility(EVisibility::Visible);
 }
 
-void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) const
+void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) 
 {
 	if (!AssetData.IsValid())
 	{
@@ -160,11 +187,14 @@ void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPt
 	switch (NewState)
 	{
 	case ECheckBoxState::Unchecked:
-		DebugHelper::Print(AssetData->AssetName.ToString() + TEXT(" is unchecked"), FColor::Red);
+		AssetDataToDeleteArray.Remove(AssetData);
+		
+		//DebugHelper::Print(AssetData->AssetName.ToString() + TEXT(" is unchecked"), FColor::Red);
 		break;
 
 	case ECheckBoxState::Checked:
-		DebugHelper::Print(AssetData->AssetName.ToString() + TEXT(" is checked"), FColor::Green);
+		AssetDataToDeleteArray.AddUnique(AssetData);
+		//DebugHelper::Print(AssetData->AssetName.ToString() + TEXT(" is checked"), FColor::Green);
 		break;
 
 	default:
@@ -215,12 +245,63 @@ FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAss
 
 	return FReply::Handled();
 }
+#pragma endregion
 
-void SMicroManagerTab::RefreshAssetListView()
+
+#pragma region Tab Buttons
+TSharedRef<SButton> SMicroManagerTab::ConstructDeleteAllButton()
 {
-	if (ConstructedAssetListView.IsValid())
-	{
-		ConstructedAssetListView->RebuildList();
-		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
-	}
+	 TSharedRef<SButton> DeleteAllButton = SNew(SButton)
+	 	.ContentPadding(FMargin(5.0f))
+	 	.OnClicked(this, &SMicroManagerTab::OnDeleteAllButtonClicked);
+	DeleteAllButton->SetContent(ConstructTextForTabButtons(TEXT("Delete All Selected")));
+	return DeleteAllButton;
 }
+
+TSharedRef<SButton> SMicroManagerTab::ConstructSelectAllButton()
+{
+	TSharedRef<SButton> SelectAllButton = SNew(SButton)
+		 .ContentPadding(FMargin(5.0f))
+		 .OnClicked(this, &SMicroManagerTab::OnSelectAllButtonClicked);
+	SelectAllButton->SetContent(ConstructTextForTabButtons(TEXT("Select All")));
+	return SelectAllButton; 
+}
+
+TSharedRef<SButton> SMicroManagerTab::ConstructDeselectAllButton()
+{
+	TSharedRef<SButton> DeselectAllButton = SNew(SButton)
+		 .ContentPadding(FMargin(5.0f))
+		 .OnClicked(this, &SMicroManagerTab::OnDeselectAllButtonClicked);
+	DeselectAllButton->SetContent(ConstructTextForTabButtons(TEXT("Deselect All")));
+	return DeselectAllButton;  
+}
+
+
+FReply SMicroManagerTab::OnDeleteAllButtonClicked()
+{
+	DebugHelper::Print(TEXT("Deleting all assets..."), FColor::Cyan);
+	return FReply::Handled();
+}
+
+FReply SMicroManagerTab::OnSelectAllButtonClicked()
+{
+	DebugHelper::Print(TEXT("Selecting all assets..."), FColor::Cyan);
+	return FReply::Handled();
+}
+
+FReply SMicroManagerTab::OnDeselectAllButtonClicked()
+{
+	DebugHelper::Print(TEXT("Deselecting all assets..."), FColor::Cyan);
+	return FReply::Handled();
+}
+
+TSharedRef<STextBlock> SMicroManagerTab::ConstructTextForTabButtons(const FString& TextContent)
+{
+	FSlateFontInfo ButtonTextFont = GetEmbossedTextFont();
+	TSharedRef<STextBlock> ConstructedTextBlock = SNew(STextBlock)
+		.Text(FText::FromString(TextContent))
+        .Font(ButtonTextFont)
+        .Justification(ETextJustify::Center);
+    return ConstructedTextBlock;
+}
+#pragma endregion

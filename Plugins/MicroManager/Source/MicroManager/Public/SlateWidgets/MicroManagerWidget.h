@@ -30,6 +30,9 @@ private:
 	// Refresh the list view
 	void RefreshAssetListView();
 
+
+#pragma region RowWidgetForAssetListView
+	
 	// Called by the SListView to generate one row per asset (non-const)
 	TSharedRef<ITableRow> OnGenerateRowForList(
 		TSharedPtr<FAssetData> AssetDataToDisplay,
@@ -37,10 +40,10 @@ private:
 	);
 
 	// Builds a checkbox widget per row
-	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay) const;
+	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay);
 
 	// Callback for checkbox state change
-	void OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) const;
+	void OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData);
 
 	// Helper function to construct a styled text block for asset class
 	TSharedRef<STextBlock> ConstructTextForRowWidget(const FString& TextContent, const FSlateFontInfo FontToUse) const;
@@ -50,7 +53,30 @@ private:
 
 	// Click Handler for the delete button
 	FReply OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData);
+#pragma endregion
 
+
+#pragma region Tab Buttons
+	
+// Constructors for the Buttons
+	TSharedRef<SButton> ConstructDeleteAllButton();
+	TSharedRef<SButton> ConstructSelectAllButton();
+	TSharedRef<SButton> ConstructDeselectAllButton();
+
+	FReply OnDeleteAllButtonClicked();
+	FReply OnSelectAllButtonClicked();
+	FReply OnDeselectAllButtonClicked();
+
+	TSharedRef<STextBlock> ConstructTextForTabButtons(const FString& TextContent);
+
+#pragma endregion
+
+	// Create an Array to hold assets to be deleted
+	TArray<TSharedPtr<FAssetData>> AssetDataToDeleteArray;
+
+	
 	// Helper for consistent font access
 	FSlateFontInfo GetEmbossedTextFont() const { return FCoreStyle::Get().GetFontStyle(FName("EmbossedText")); }
 };
+
+
