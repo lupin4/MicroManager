@@ -187,7 +187,11 @@ void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPt
 	switch (NewState)
 	{
 	case ECheckBoxState::Unchecked:
-		AssetDataToDeleteArray.Remove(AssetData);
+		if (AssetDataToDeleteArray.Contains(AssetData))
+		{
+			AssetDataToDeleteArray.Remove(AssetData);
+		}
+		
 		
 		//DebugHelper::Print(AssetData->AssetName.ToString() + TEXT(" is unchecked"), FColor::Red);
 		break;
@@ -279,7 +283,15 @@ TSharedRef<SButton> SMicroManagerTab::ConstructDeselectAllButton()
 
 FReply SMicroManagerTab::OnDeleteAllButtonClicked()
 {
-	DebugHelper::Print(TEXT("Deleting all assets..."), FColor::Cyan);
+	if (AssetDataToDeleteArray.Num() == 0)
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No assets selected for deletion"));
+		return;
+	}
+
+	// Call the custom function to delete all selected assets
+	
+	//DebugHelper::Print(TEXT("Deleting all assets..."), FColor::Cyan);
 	return FReply::Handled();
 }
 
