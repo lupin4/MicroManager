@@ -358,6 +358,17 @@ bool FMicroManagerModule::DeleteSingleAssetForAssetList(const FAssetData& AssetD
 	return false;
 }
 
+bool FMicroManagerModule::DeleteMultipleAssetsForAssetList(
+	const TArray<FAssetData> AssetsToDelete)
+{
+	if (ObjectTools::DeleteAssets(AssetsToDelete) > 0)
+	{
+		return true;
+		
+	}
+	return false;
+}
+
 #pragma endregion
 
 

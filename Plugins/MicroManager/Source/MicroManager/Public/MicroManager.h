@@ -52,6 +52,7 @@ public:
 #pragma region ProcessDataForMicroManager
 
 	bool DeleteSingleAssetForAssetList(const FAssetData& AssetDataToDelete);
+	bool DeleteMultipleAssetsForAssetList(TArray<FAssetData> AssetsToDelete);
 
 
 #pragma endregion	

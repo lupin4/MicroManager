@@ -1,5 +1,5 @@
 #include "SlateWidgets/MicroManagerWidget.h"
-#include "SlateBasics.h"
+//#include "SlateBasics.h"
 #include "DebugHelper.h"
 #include "MicroManager.h"
 
@@ -101,6 +101,7 @@ void SMicroManagerTab::RefreshAssetListView()
 {
 	if (ConstructedAssetListView.IsValid())
 	{
+		AssetDataToDeleteArray.Empty();
 		ConstructedAssetListView->RebuildList();
 		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
 	}
@@ -226,6 +227,7 @@ TSharedRef<SButton> SMicroManagerTab::ConstructButtonForRowWidget(TSharedPtr<FAs
 // Callback for the delete button click event
 FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData)
 {
+	// Refreshes the List view to reflect the deletion
 	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
 
 	// Call the custom function to delete the clicked asset
@@ -286,13 +288,35 @@ FReply SMicroManagerTab::OnDeleteAllButtonClicked()
 	if (AssetDataToDeleteArray.Num() == 0)
 	{
 		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No assets selected for deletion"));
-		return;
+		return FReply::Handled();  // Return if no assets are selected for deletion;
 	}
 
 	// Call the custom function to delete all selected assets
-	
+	TArray<FAssetData> AssetDataToDelete;
+
+	for (const TSharedPtr<FAssetData>& Data : AssetDataToDeleteArray)
+	{
+		AssetDataToDelete.Add(*Data.Get());
+	}
+
+	// Refreshes the List view to reflect the deletion
+	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
+
+	const bool bAssetsDeleted = MicroManagerModule.DeleteMultipleAssetsForAssetList(AssetDataToDelete);
+
+	if (bAssetsDeleted)
+	{
+		for (const TSharedPtr<FAssetData>& DeletedData : AssetDataToDeleteArray)
+		{
+			if (StoredAssetsData.Contains(DeletedData))
+			{
+				StoredAssetsData.Remove(DeletedData);
+			}
+		}
+		RefreshAssetListView();
+	}
 	//DebugHelper::Print(TEXT("Deleting all assets..."), FColor::Cyan);
-	return FReply::Handled();
+		return FReply::Handled();
 }
 
 FReply SMicroManagerTab::OnSelectAllButtonClicked()
