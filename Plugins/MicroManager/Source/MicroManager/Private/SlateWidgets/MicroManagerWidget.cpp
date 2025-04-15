@@ -9,6 +9,10 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 
 	// Store the incoming asset data into a member variable
 	StoredAssetsData = InArgs._AssetsDataArray;
+	
+	// Ensure the array is empty if the tab is closed or another window is created
+	CheckedBoxesArray.Empty();
+	AssetDataToDeleteArray.Empty();
 
 	DebugHelper::PrintLog(TEXT("MicroManagerTab::Construct called"));
 	DebugHelper::PrintLog(FString::Printf(TEXT("StoredAssetsData count: %d"), StoredAssetsData.Num()));
@@ -99,9 +103,10 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> SMicroManagerTab::ConstructAssetLi
 
 void SMicroManagerTab::RefreshAssetListView()
 {
+	AssetDataToDeleteArray.Empty();
+	CheckedBoxesArray.Empty();
 	if (ConstructedAssetListView.IsValid())
 	{
-		AssetDataToDeleteArray.Empty();
 		ConstructedAssetListView->RebuildList();
 		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
 	}
@@ -330,15 +335,12 @@ FReply SMicroManagerTab::OnSelectAllButtonClicked()
 	}
 	for (const TSharedRef<SCheckBox> CheckBox:CheckedBoxesArray)
 	{
-
 		// Checks if the checkbox is currently unchecked, and if so, toggle its state to checked.
 		if (!CheckBox->IsChecked())
 		{
 			// Changes the checked state of the checkbox to checked.
 			CheckBox->ToggleCheckedState();
 		}
-		
-		
 	}
 	DebugHelper::Print(TEXT("Selecting all assets..."), FColor::Purple);
 	return FReply::Handled();
@@ -346,7 +348,24 @@ FReply SMicroManagerTab::OnSelectAllButtonClicked()
 
 FReply SMicroManagerTab::OnDeselectAllButtonClicked()
 {
-	DebugHelper::Print(TEXT("Deselecting all assets..."), FColor::Cyan);
+	if (CheckedBoxesArray.Num() == 0)
+	{
+		return FReply::Handled();  // Return if no assets are present;
+	}
+
+	for (const TSharedRef<SCheckBox> CheckBox:CheckedBoxesArray)
+	{
+		// Checks if the checkbox is currently unchecked, and if so, toggle its state to checked.
+		if (CheckBox->IsChecked())
+		{
+			// Changes the checked state of the checkbox to unchecked.
+			CheckBox->ToggleCheckedState();
+		}
+	}
+	
+
+	
+	DebugHelper::Print(TEXT("Deselecting all assets..."), FColor::Orange);
 	return FReply::Handled();
 }
 
