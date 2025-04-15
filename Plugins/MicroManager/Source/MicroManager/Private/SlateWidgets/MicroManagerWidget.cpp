@@ -171,10 +171,12 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 
 TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay)
 {
-	return SNew(SCheckBox)
+	TSharedRef<SCheckBox> ConstructedCheckBox = SNew(SCheckBox)
 		.Type(ESlateCheckBoxType::CheckBox)
 		.OnCheckStateChanged(this, &SMicroManagerTab::OnCheckBoxStateChanged, AssetDataToDisplay)
 		.Visibility(EVisibility::Visible);
+	CheckedBoxesArray.Add(ConstructedCheckBox);
+	return ConstructedCheckBox;
 }
 
 void SMicroManagerTab::OnCheckBoxStateChanged(ECheckBoxState NewState, TSharedPtr<FAssetData> AssetData) 
@@ -321,7 +323,24 @@ FReply SMicroManagerTab::OnDeleteAllButtonClicked()
 
 FReply SMicroManagerTab::OnSelectAllButtonClicked()
 {
-	DebugHelper::Print(TEXT("Selecting all assets..."), FColor::Cyan);
+
+	if (CheckedBoxesArray.Num() == 0)
+	{
+		return FReply::Handled();  // Return if no assets are present;
+	}
+	for (const TSharedRef<SCheckBox> CheckBox:CheckedBoxesArray)
+	{
+
+		// Checks if the checkbox is currently unchecked, and if so, toggle its state to checked.
+		if (!CheckBox->IsChecked())
+		{
+			// Changes the checked state of the checkbox to checked.
+			CheckBox->ToggleCheckedState();
+		}
+		
+		
+	}
+	DebugHelper::Print(TEXT("Selecting all assets..."), FColor::Purple);
 	return FReply::Handled();
 }
 

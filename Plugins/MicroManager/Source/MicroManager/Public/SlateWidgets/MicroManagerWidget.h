@@ -23,6 +23,13 @@ private:
 	// The array of asset data displayed in the list view
 	TArray<TSharedPtr<FAssetData>> StoredAssetsData;
 
+	TArray<TSharedRef<SCheckBox>> CheckedBoxesArray;
+
+	// Create an Array to hold assets to be deleted
+	TArray<TSharedPtr<FAssetData>> AssetDataToDeleteArray;
+
+	
+
 	TSharedRef<SListView<TSharedPtr<FAssetData>>> ConstructAssetListView();
 
 	TSharedPtr<SListView<TSharedPtr<FAssetData>>> ConstructedAssetListView;
@@ -71,8 +78,7 @@ private:
 
 #pragma endregion
 
-	// Create an Array to hold assets to be deleted
-	TArray<TSharedPtr<FAssetData>> AssetDataToDeleteArray;
+	
 
 	
 	// Helper for consistent font access
