@@ -352,6 +352,7 @@ FReply SMicroManagerTab::OnDeselectAllButtonClicked()
 	{
 		return FReply::Handled();  // Return if no assets are present;
 	}
+	
 
 	for (const TSharedRef<SCheckBox> CheckBox:CheckedBoxesArray)
 	{
