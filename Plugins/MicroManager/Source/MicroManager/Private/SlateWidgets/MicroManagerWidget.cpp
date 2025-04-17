@@ -168,7 +168,7 @@ ESelectInfo::Type InSelectInfo)
 	// Pass data for our module to filter the asset list
 	
 	FMicroManagerModule& MicroManagerModule = 
-	FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("SuperManager"));
+	FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
 
 	//Pass data for our module to filter based on the selected option
 	if(*SelectedOption.Get() == ListAll)
