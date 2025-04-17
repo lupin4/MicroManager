@@ -303,6 +303,12 @@ TArray<TSharedPtr<FAssetData>> FMicroManagerModule::GetAllAssetDataUnderSelected
 	TArray<TSharedPtr<FAssetData>> AvailableAssetsData;
 
 	// Get all asset paths under the selected folder
+	if (FolderPathsSelected.Num() == 0)
+	{
+		UE_LOG(LogTemp, Error, TEXT("No folder paths selected. Cannot gather assets."));
+		return {}; // empty array to prevent crash
+	}
+
 	TArray<FString> AssetPathNames = UEditorAssetLibrary::ListAssets(FolderPathsSelected[0]);
 
 	for (const FString& AssetPath : AssetPathNames)

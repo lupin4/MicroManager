@@ -131,6 +131,10 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	{
 		DisplayAssetName = AssetDataToDisplay->AssetName.ToString();
 	}
+	if (!AssetDataToDisplay.IsValid())
+	{
+		
+	}
 
 	DebugHelper::PrintLog(FString::Printf(TEXT("Generating row for: %s"), *DisplayAssetName));
 
