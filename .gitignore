@@ -50,6 +50,8 @@ Thumbs.db
 *.uasset
 *.umap
 
+#visual Studio 
+.vs/
 # Allow the specific Editor Utility Blueprint used by the MicroManager plugin
 !Plugins/MicroManager/Content/EUBP_QuickAssetActions.uasset
 
