@@ -377,22 +377,31 @@ bool FMicroManagerModule::DeleteMultipleAssetsForAssetList(
 
 
 
-void FMicroManagerModule::ListUnusedAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter, 
-TArray<TSharedPtr<FAssetData>>& OutUnusedAssetsData)
+void FMicroManagerModule::ListUnusedAssetsForAssetList(
+	const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter, 
+	TArray<TSharedPtr<FAssetData>>& OutUnusedAssetsData)
 {
 	OutUnusedAssetsData.Empty();
 
-	for(const TSharedPtr<FAssetData>& DataSharedPtr:AssetsDataToFilter)
-	{	
-		TArray<FString> AssetReferencers =
-		UEditorAssetLibrary::FindPackageReferencersForAsset(DataSharedPtr->ObjectPath.ToString());
+	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
+	{
+		if (!DataSharedPtr.IsValid())
+		{
+			continue;
+		}
 
-		if(AssetReferencers.Num()==0)
+		FString AssetPath = DataSharedPtr->GetObjectPathString();
+
+		TArray<FString> AssetReferencers = 
+			UEditorAssetLibrary::FindPackageReferencersForAsset(AssetPath);
+
+		if (AssetReferencers.Num() == 0)
 		{
 			OutUnusedAssetsData.Add(DataSharedPtr);
 		}
 	}
 }
+
 
 
 #pragma endregion
