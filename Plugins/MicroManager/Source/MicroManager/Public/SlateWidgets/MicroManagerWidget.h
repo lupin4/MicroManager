@@ -22,6 +22,7 @@ public:
 private:
 	// The array of asset data displayed in the list view
 	TArray<TSharedPtr<FAssetData>> StoredAssetsData;
+	TArray<TSharedPtr<FAssetData>> DisplayedAssetsData;
 
 	TArray<TSharedRef<SCheckBox>> CheckedBoxesArray;
 
@@ -38,12 +39,18 @@ private:
 	void RefreshAssetListView();
 
 
-#pragma region ComboBoxForListingConditions
+#pragma region ComboBoxForListingCondition
 
+	TSharedRef< SComboBox < TSharedPtr <FString> > > ConstructComboBox();
 
-	TShaderRef<SComboBox<TSharedPtr<FString>>> ConstructComboBox();
-	TArray<TSharedPtr<FString>> ComboBoxSourceItems;
+	TArray< TSharedPtr <FString> > ComboBoxSourceItems;
+
 	TSharedRef<SWidget> OnGenerateComboContent(TSharedPtr<FString> SourceItem);
+
+	void OnComboSelectionChanged(TSharedPtr<FString> SelectedOption,ESelectInfo::Type InSelectInfo);
+
+	TSharedPtr<STextBlock> ComboDisplayTextBlock;
+
 #pragma endregion
 
 #pragma region RowWidgetForAssetListView

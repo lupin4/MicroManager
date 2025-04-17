@@ -6,6 +6,8 @@
 
 
 #define ListAll TEXT("List All Available Assets")
+#define ListUnused TEXT("List Unused Assets")
+
 
 void SMicroManagerTab::Construct(const FArguments& InArgs)
 {
@@ -13,12 +15,16 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 
 	// Store the incoming asset data into a member variable
 	StoredAssetsData = InArgs._AssetsDataArray;
+	DisplayedAssetsData = StoredAssetsData;
 	
 	// Ensure the array is empty if the tab is closed or another window is created
 	CheckedBoxesArray.Empty();
 	AssetDataToDeleteArray.Empty();
 
+
+	//ComboBox Elements 
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListAll));
+	ComboBoxSourceItems.Add(MakeShared<FString>(ListUnused));
 
 	DebugHelper::PrintLog(TEXT("MicroManagerTab::Construct called"));
 	DebugHelper::PrintLog(FString::Printf(TEXT("StoredAssetsData count: %d"), StoredAssetsData.Num()));
@@ -60,7 +66,7 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 			+ SHorizontalBox::Slot()
 			.AutoWidth()
 			[
-				
+				ConstructComboBox()
 			]
 		]
 
@@ -109,7 +115,7 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> SMicroManagerTab::ConstructAssetLi
 {
 	ConstructedAssetListView = SNew(SListView<TSharedPtr<FAssetData>>)
 		.ItemHeight(24.f)
-		.ListItemsSource(&StoredAssetsData)
+		.ListItemsSource(&DisplayedAssetsData)
 		.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList);
 	return ConstructedAssetListView.ToSharedRef();
 }
@@ -126,25 +132,62 @@ void SMicroManagerTab::RefreshAssetListView()
 }
 
 
-#pragma region ComboBoxForListingConditions
+#pragma region ComboBoxForListingCondition
 
-TShaderRef<SComboBox<TSharedPtr<FString>>> SMicroManagerTab::ConstructComboBox()
+TSharedRef<SComboBox<TSharedPtr<FString>>> SMicroManagerTab::ConstructComboBox()
 {
-	TShaderRef<SComboBox<TSharedPtr<FString>>> ConstructedComboBox =
-		SNew(SComboBox<TSharedPtr<FString>>)
-		.OptionsSource(&ComboBoxSourceItems)
-		.OnGenerateWidget(this, SMicroManagerTab::OnGenerateComboContent)
-	return TShaderRef<SComboBox>();
+	TSharedRef< SComboBox < TSharedPtr <FString > > > ConstructedComboBox =
+	SNew(SComboBox < TSharedPtr <FString > >)
+	.OptionsSource(&ComboBoxSourceItems)
+	.OnGenerateWidget(this,&SMicroManagerTab::OnGenerateComboContent)
+	.OnSelectionChanged(this,&SMicroManagerTab::OnComboSelectionChanged)
+	[
+		SAssignNew(ComboDisplayTextBlock,STextBlock)
+		.Text(FText::FromString(TEXT("List Assets Option")))
+	];
+
+	return ConstructedComboBox;
 }
 
 TSharedRef<SWidget> SMicroManagerTab::OnGenerateComboContent(TSharedPtr<FString> SourceItem)
+{	
+	TSharedRef <STextBlock> ContructedComboText = SNew(STextBlock)
+	.Text(FText::FromString(*SourceItem.Get()));
+
+	return ContructedComboText;
+}
+
+void SMicroManagerTab::OnComboSelectionChanged(TSharedPtr<FString> SelectedOption, 
+ESelectInfo::Type InSelectInfo)
 {
-	return TSharedRef<SWidget>();
+	DebugHelper::Print(*SelectedOption.Get(),FColor::Cyan);
+	
+
+	ComboDisplayTextBlock->SetText(FText::FromString(*SelectedOption.Get()));
+
+	// Pass data for our module to filter the asset list
+	
+	FMicroManagerModule& MicroManagerModule = 
+	FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("SuperManager"));
+
+	//Pass data for our module to filter based on the selected option
+	if(*SelectedOption.Get() == ListAll)
+	{
+		//List all stored asset data
+	}
+	else if(*SelectedOption.Get() == ListUnused)
+	{
+		//List all unused assets
+		MicroManagerModule.ListUnusedAssetsForAssetList(StoredAssetsData,DisplayedAssetsData);
+		RefreshAssetListView();
+	}
 	
 }
 
 
+
 #pragma endregion
+
 
 #pragma region RowWidgetForAssetListView
 
