@@ -38,6 +38,14 @@ private:
 	void RefreshAssetListView();
 
 
+#pragma region ComboBoxForListingConditions
+
+
+	TShaderRef<SComboBox<TSharedPtr<FString>>> ConstructComboBox();
+	TArray<TSharedPtr<FString>> ComboBoxSourceItems;
+	TSharedRef<SWidget> OnGenerateComboContent(TSharedPtr<FString> SourceItem);
+#pragma endregion
+
 #pragma region RowWidgetForAssetListView
 	
 	// Called by the SListView to generate one row per asset (non-const)

@@ -3,6 +3,10 @@
 #include "DebugHelper.h"
 #include "MicroManager.h"
 
+
+
+#define ListAll TEXT("List All Available Assets")
+
 void SMicroManagerTab::Construct(const FArguments& InArgs)
 {
 	bCanSupportFocus = true;
@@ -13,6 +17,8 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 	// Ensure the array is empty if the tab is closed or another window is created
 	CheckedBoxesArray.Empty();
 	AssetDataToDeleteArray.Empty();
+
+	ComboBoxSourceItems.Add(MakeShared<FString>(ListAll));
 
 	DebugHelper::PrintLog(TEXT("MicroManagerTab::Construct called"));
 	DebugHelper::PrintLog(FString::Printf(TEXT("StoredAssetsData count: %d"), StoredAssetsData.Num()));
@@ -33,7 +39,7 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 	[
 		SNew(SVerticalBox)
 
-		// Title Text
+		// First Slot Title Text
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
@@ -44,14 +50,21 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 			.ColorAndOpacity(FSlateColor(FLinearColor::White))
 		]
 
-		// Placeholder Dropdown
+		// Second Slot Placeholder Dropdown
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
 			SNew(SHorizontalBox)
+
+			// combo Box slot
+			+ SHorizontalBox::Slot()
+			.AutoWidth()
+			[
+				
+			]
 		]
 
-		// Asset List
+		// Third Slot Asset List
 		+ SVerticalBox::Slot()
 		.VAlign(VAlign_Fill)
 		[
@@ -62,7 +75,7 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 			]
 		]
 
-		// Placeholder Buttons
+		// Fourth Slot Placeholder Buttons
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		[
@@ -111,6 +124,27 @@ void SMicroManagerTab::RefreshAssetListView()
 		DebugHelper::PrintLog(TEXT("Asset list refreshed"));
 	}
 }
+
+
+#pragma region ComboBoxForListingConditions
+
+TShaderRef<SComboBox<TSharedPtr<FString>>> SMicroManagerTab::ConstructComboBox()
+{
+	TShaderRef<SComboBox<TSharedPtr<FString>>> ConstructedComboBox =
+		SNew(SComboBox<TSharedPtr<FString>>)
+		.OptionsSource(&ComboBoxSourceItems)
+		.OnGenerateWidget(this, SMicroManagerTab::OnGenerateComboContent)
+	return TShaderRef<SComboBox>();
+}
+
+TSharedRef<SWidget> SMicroManagerTab::OnGenerateComboContent(TSharedPtr<FString> SourceItem)
+{
+	return TSharedRef<SWidget>();
+	
+}
+
+
+#pragma endregion
 
 #pragma region RowWidgetForAssetListView
 
