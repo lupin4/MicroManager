@@ -7,6 +7,7 @@
 
 #define ListAll TEXT("List All Available Assets")
 #define ListUnused TEXT("List Unused Assets")
+#define ListSameName TEXT("List Assets with Same Name")
 
 
 void SMicroManagerTab::Construct(const FArguments& InArgs)
@@ -25,6 +26,7 @@ void SMicroManagerTab::Construct(const FArguments& InArgs)
 	//ComboBox Elements 
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListAll));
 	ComboBoxSourceItems.Add(MakeShared<FString>(ListUnused));
+	ComboBoxSourceItems.Add(MakeShared<FString>(ListSameName));
 
 	DebugHelper::PrintLog(TEXT("MicroManagerTab::Construct called"));
 	DebugHelper::PrintLog(FString::Printf(TEXT("StoredAssetsData count: %d"), StoredAssetsData.Num()));
@@ -179,6 +181,12 @@ ESelectInfo::Type InSelectInfo)
 	{
 		//List all unused assets
 		MicroManagerModule.ListUnusedAssetsForAssetList(StoredAssetsData,DisplayedAssetsData);
+		RefreshAssetListView();
+	}
+	else if (*SelectedOption.Get() == ListSameName)
+	{
+		//List all assets with the same name
+		MicroManagerModule.ListSameNameAssetsForAssetList(StoredAssetsData,DisplayedAssetsData);
 		RefreshAssetListView();
 	}
 	

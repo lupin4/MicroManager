@@ -402,7 +402,33 @@ void FMicroManagerModule::ListUnusedAssetsForAssetList(
 	}
 }
 
+void FMicroManagerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,
+	TArray<TSharedPtr<FAssetData>>& OutSameNameAssetsData)
+{
+	OutSameNameAssetsData.Empty();
 
+    TMultiMap<FString, TSharedPtr<FAssetData>> AssetInfoMultiMap;
+
+	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
+	{
+		AssetInfoMultiMap.Emplace(DataSharedPtr->AssetName.ToString(), DataSharedPtr);
+	}
+	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
+	{
+		TArray<TSharedPtr<FAssetData>> OutAssetsData;
+		AssetInfoMultiMap.MultiFind(DataSharedPtr->AssetName.ToString(), OutAssetsData);
+		if (OutAssetsData.Num() > 1) continue;
+		for (const TSharedPtr<FAssetData>& SameNameData : OutAssetsData)
+		{
+			if (SameNameData.IsValid())
+			{
+				OutSameNameAssetsData.AddUnique(SameNameData);
+			}
+		}
+	}
+
+	
+}
 
 #pragma endregion
 
