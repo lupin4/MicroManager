@@ -61,6 +61,8 @@ private:
 		const TSharedRef<STableViewBase>& OwnerTable
 	);
 
+	void OnRowWidgetMouseButtonClicked(TSharedPtr<FAssetData> ClickedData);
+
 	// Builds a checkbox widget per row
 	TSharedRef<SCheckBox> ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay);
 

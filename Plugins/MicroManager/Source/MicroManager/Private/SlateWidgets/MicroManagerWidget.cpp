@@ -118,7 +118,8 @@ TSharedRef<SListView<TSharedPtr<FAssetData>>> SMicroManagerTab::ConstructAssetLi
 	ConstructedAssetListView = SNew(SListView<TSharedPtr<FAssetData>>)
 		.ItemHeight(24.f)
 		.ListItemsSource(&DisplayedAssetsData)
-		.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList);
+		.OnGenerateRow(this, &SMicroManagerTab::OnGenerateRowForList)
+		.OnMouseButtonClick(this, &SMicroManagerTab::OnRowWidgetMouseButtonClicked);
 	return ConstructedAssetListView.ToSharedRef();
 }
 
@@ -263,6 +264,12 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 	];
 }
 
+
+void SMicroManagerTab::OnRowWidgetMouseButtonClicked(TSharedPtr<FAssetData> ClickedData)
+{
+	DebugHelper::Print(ClickedData->AssetName.ToString() + TEXT(" was clicked"), FColor::Emerald);
+	
+}
 TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay)
 {
 	TSharedRef<SCheckBox> ConstructedCheckBox = SNew(SCheckBox)
@@ -338,6 +345,12 @@ FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAss
 		{
 			StoredAssetsData.Remove(ClickedAssetData);
 			DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset: %s"), *ClickedAssetData->AssetName.ToString()));
+		}
+
+		if (DisplayedAssetsData.Contains(ClickedAssetData))
+		{
+			DisplayedAssetsData.Remove(ClickedAssetData);
+            DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset from displayed list: %s"), *ClickedAssetData->AssetName.ToString()));
 		}
 		
 		ConstructedAssetListView->RequestListRefresh();
