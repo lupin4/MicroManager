@@ -267,7 +267,11 @@ TSharedRef<ITableRow> SMicroManagerTab::OnGenerateRowForList(
 
 void SMicroManagerTab::OnRowWidgetMouseButtonClicked(TSharedPtr<FAssetData> ClickedData)
 {
-	DebugHelper::Print(ClickedData->AssetName.ToString() + TEXT(" was clicked"), FColor::Emerald);
+	//DebugHelper::Print(ClickedData->AssetName.ToString() + TEXT(" was clicked"), FColor::Emerald);
+	// Refreshes the List view to reflect the deletion by loading the module
+	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
+	MicroManagerModule.SyncCBToClickedAssetForAssetList(ClickedData->ToSoftObjectPath().ToString());
+	
 	
 }
 TSharedRef<SCheckBox> SMicroManagerTab::ConstructCheckBox(const TSharedPtr<FAssetData>& AssetDataToDisplay)
@@ -330,9 +334,8 @@ TSharedRef<SButton> SMicroManagerTab::ConstructButtonForRowWidget(TSharedPtr<FAs
 // Callback for the delete button click event
 FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData)
 {
-	// Refreshes the List view to reflect the deletion
+	// Refreshes the List view to reflect the deletion by loading the module
 	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
-
 	// Call the custom function to delete the clicked asset
 	// The TSharedPtr<FAssetData> assetData is passed to the custom function and converted to a raw pointer for deletion
 	const bool bAssetDeleted = MicroManagerModule.DeleteSingleAssetForAssetList(*ClickedAssetData.Get());

@@ -340,14 +340,10 @@ TArray<TSharedPtr<FAssetData>> FMicroManagerModule::GetAllAssetDataUnderSelected
 	return AvailableAssetsData;
 }
 
-
-
 #pragma endregion
 
 
-
 #pragma region ProcessDataForMicromanager
-
 
 bool FMicroManagerModule::DeleteSingleAssetForAssetList(const FAssetData& AssetDataToDelete)
 {
@@ -374,8 +370,6 @@ bool FMicroManagerModule::DeleteMultipleAssetsForAssetList(
 	}
 	return false;
 }
-
-
 
 void FMicroManagerModule::ListUnusedAssetsForAssetList(
 	const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter, 
@@ -426,8 +420,14 @@ void FMicroManagerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr
 			}
 		}
 	}
+}
 
-	
+void FMicroManagerModule::SyncCBToClickedAssetForAssetList(const FString& AssetPathsToSync)
+{
+	TArray<FString> AssetsPathsToSync;
+	AssetsPathsToSync.Add(AssetPathsToSync);
+    
+    UEditorAssetLibrary::SyncBrowserToObjects(AssetsPathsToSync);
 }
 
 #pragma endregion
