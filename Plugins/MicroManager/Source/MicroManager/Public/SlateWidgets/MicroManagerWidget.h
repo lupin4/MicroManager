@@ -13,6 +13,7 @@ class SMicroManagerTab : public SCompoundWidget
 	SLATE_BEGIN_ARGS(SMicroManagerTab) {}
 	// Defines a single argument to initialize the asset list
 	SLATE_ARGUMENT(TArray<TSharedPtr<FAssetData>>, AssetsDataArray)
+		SLATE_ARGUMENT(FString,CurrentSelectedFolder)
 SLATE_END_ARGS()
 
 public:
@@ -50,6 +51,8 @@ private:
 	void OnComboSelectionChanged(TSharedPtr<FString> SelectedOption,ESelectInfo::Type InSelectInfo);
 
 	TSharedPtr<STextBlock> ComboDisplayTextBlock;
+
+	TSharedRef<STextBlock> ConstructComboHelpTexts(const FString& TextContent, ETextJustify::Type TextJustify);
 
 #pragma endregion
 

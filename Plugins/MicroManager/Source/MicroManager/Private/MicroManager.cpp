@@ -294,6 +294,7 @@ TSharedRef<SDockTab> FMicroManagerModule::OnSpawnMicroManagerTab(const FSpawnTab
 	[
 		SNew(SMicroManagerTab)
 		.AssetsDataArray(GetAllAssetDataUnderSelectedFolders())
+		.CurrentSelectedFolder(FolderPathsSelected[0])
 		
 	];
 }
