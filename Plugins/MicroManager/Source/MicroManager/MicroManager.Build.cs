@@ -1,4 +1,6 @@
 using UnrealBuildTool;
+using System.IO;
+
 
 public class MicroManager : ModuleRules
 {
@@ -9,12 +11,17 @@ public class MicroManager : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// Add public include paths required here
+				Path.Combine(ModuleDirectory, "Public"),
+				Path.Combine(ModuleDirectory, "Public", "SlateWidgets")
 			}
 		);
 
 		PrivateIncludePaths.AddRange(
 			new string[] {
 				// Add private include paths required here
+				Path.Combine(ModuleDirectory, "Private"),
+				Path.Combine(ModuleDirectory, "Private", "SlateWidgets")
+				
 			}
 		);
 
@@ -30,7 +37,7 @@ public class MicroManager : ModuleRules
 				"Slate", "SlateCore", "UMG", "Niagara", "CinematicCamera", "MovieScene",
 				"MovieSceneTracks", "LevelSequence","AssetRegistry",
 				"AssetTools",
-				"ContentBrowser","InputCore"
+				"ContentBrowser","InputCore","AppFramework"
 			}
 		);
 
@@ -39,6 +46,10 @@ public class MicroManager : ModuleRules
 			{
 				"Slate",
 				"SlateCore",
+				"EditorStyle", 
+				"LevelEditor", 
+				"UMG",
+				"SlateReflector"
 				// Add private dependencies that you statically link with here
 			}
 		);

@@ -10,6 +10,11 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "SlateWidgets/MicroManagerWidget.h"
 
+#include "Widgets/Docking/SDockTab.h"
+// #include "SlateWidgets/SDiscoStarship.h"
+
+
+
 #define LOCTEXT_NAMESPACE "FMicroManagerModule"
 
 void FMicroManagerModule::StartupModule()
@@ -19,7 +24,30 @@ void FMicroManagerModule::StartupModule()
     // Register the menu extension.
     InitCBMenuExtension();
 	RegisterMicroManagerTab();
+	
+
+	// Register the hidden Starship Gallery tab
+	// Register a tab that hosts the Starship Gallery
+
+	// Optional: auto-open on startup
+	// FGlobalTabmanager::Get()->TryInvokeTab(FName("STARSHIP GALLERY"));
+	// FGlobalTabmanager::Get()->RegisterNomadTabSpawner(
+	// 	"DiscoStarship",
+	// 	FOnSpawnTab::CreateLambda([](const FSpawnTabArgs& Args)
+	// 	{
+	// 		return SNew(SDockTab)
+	// 			.TabRole(ETabRole::NomadTab)
+	// 			[
+	// 				SNew(SDiscoStarship)
+	// 			];
+	// 	}) // <-- closes CreateLambda
+	// )       // <-- closes RegisterNomadTabSpawner
+	// .SetDisplayName(FText::FromString("Disco Starship Gallery"));
+
+
 }
+
+
 
 #pragma region ContentBrowserMenuExtension
 

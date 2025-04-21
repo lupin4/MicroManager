@@ -13,6 +13,8 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+	
+
 private:
 
 
@@ -45,6 +47,10 @@ private:
 
 	TArray<TSharedPtr<FAssetData>> GetAllAssetDataUnderSelectedFolders();;
 
+
+
+
+
 #pragma endregion
 
 public:
@@ -56,6 +62,8 @@ public:
 	void ListUnusedAssetsForAssetList(const TArray< TSharedPtr <FAssetData> >& AssetsDataToFilter,TArray< TSharedPtr <FAssetData> >& OutUnusedAssetsData);
 	void ListSameNameAssetsForAssetList(const TArray< TSharedPtr <FAssetData> >& AssetsDataToFilter,TArray< TSharedPtr <FAssetData> >& OutSameNameAssetsData);
 	void SyncCBToClickedAssetForAssetList(const FString& AssetPathsToSync);
+
+	
 
 
 #pragma endregion	
