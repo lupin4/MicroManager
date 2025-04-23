@@ -425,12 +425,25 @@ void FMicroManagerModule::ListUnusedAssetsForAssetList(
 	}
 }
 
+/**
+ * @brief Identifies assets with the same name from a given list and outputs them.
+ * 
+ * This function processes a list of asset data, identifying assets that share the same name.
+ * It populates an output array with these assets, allowing for further processing or analysis.
+ * 
+ * @param AssetsDataToFilter A constant reference to an array of shared pointers to FAssetData objects.
+ *                           This array contains the asset data to be filtered for same-name assets.
+ * @param OutSameNameAssetsData A reference to an array of shared pointers to FAssetData objects.
+ *                              This array will be populated with assets that have the same name.
+ *                              It is cleared at the start of the function to ensure it only contains
+ *                              the results of the current operation.
+ */
 void FMicroManagerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr<FAssetData>>& AssetsDataToFilter,
-	TArray<TSharedPtr<FAssetData>>& OutSameNameAssetsData)
+                                                         TArray<TSharedPtr<FAssetData>>& OutSameNameAssetsData)
 {
 	OutSameNameAssetsData.Empty();
 
-    TMultiMap<FString, TSharedPtr<FAssetData>> AssetInfoMultiMap;
+	TMultiMap<FString, TSharedPtr<FAssetData>> AssetInfoMultiMap;
 
 	for (const TSharedPtr<FAssetData>& DataSharedPtr : AssetsDataToFilter)
 	{
@@ -451,10 +464,18 @@ void FMicroManagerModule::ListSameNameAssetsForAssetList(const TArray<TSharedPtr
 	}
 }
 
+/**
+ * @brief Synchronizes the Content Browser to the specified asset path.
+ * 
+ * This function takes a single asset path and synchronizes the Content Browser
+ * to focus on the specified asset, allowing users to quickly locate it within the editor.
+ * 
+ * @param AssetPathsToSync A string representing the path of the asset to which the Content Browser should be synchronized.
+ */
 void FMicroManagerModule::SyncCBToClickedAssetForAssetList(const FString& AssetPathsToSync)
 {
-	TArray<FString> AssetsPathsToSync;
-	AssetsPathsToSync.Add(AssetPathsToSync);
+    TArray<FString> AssetsPathsToSync;
+    AssetsPathsToSync.Add(AssetPathsToSync);
     
     UEditorAssetLibrary::SyncBrowserToObjects(AssetsPathsToSync);
 }
@@ -467,6 +488,7 @@ void FMicroManagerModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
+	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner(FName("Micro Manager"));
 }
 
 
