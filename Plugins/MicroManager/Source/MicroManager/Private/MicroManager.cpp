@@ -9,7 +9,7 @@
 #include "ObjectTools.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "SlateWidgets/MicroManagerWidget.h"
-
+#include "CustomStyle/MicroManagerStyle.h"
 #include "Widgets/Docking/SDockTab.h"
 // #include "SlateWidgets/SDiscoStarship.h"
 
@@ -22,6 +22,7 @@ void FMicroManagerModule::StartupModule()
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 	// settings.
     // Register the menu extension.
+	FMicroManagerStyle::InitializeIcons();
     InitCBMenuExtension();
 	RegisterMicroManagerTab();
 	
@@ -112,7 +113,7 @@ void FMicroManagerModule::AddCBMenuEntry(FMenuBuilder& MenuBuilder)
 	MenuBuilder.AddMenuEntry(
 		FText::FromString(TEXT("Delete Unused Assets")),
 		FText::FromString(TEXT("Safely delete all unused assets in the directory.")),
-		FSlateIcon(),
+		FSlateIcon(FMicroManagerStyle::GetStyleSetName(), "ContentBrowser.DeleteUnusedAssets"),
 		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnDeleteUnusedAssetsButtonClicked)
 	);
 
@@ -120,7 +121,7 @@ void FMicroManagerModule::AddCBMenuEntry(FMenuBuilder& MenuBuilder)
 	MenuBuilder.AddMenuEntry(
 		FText::FromString(TEXT("Delete Empty Folders")),
 		FText::FromString(TEXT("Safely delete all empty folders in the directory.")),
-		FSlateIcon(),
+		FSlateIcon(FMicroManagerStyle::GetStyleSetName(), "ContentBrowser.DeleteEmptyFolders"),
 		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnDeleteUnusedFoldersButtonClicked)
 	);
 
@@ -128,7 +129,7 @@ void FMicroManagerModule::AddCBMenuEntry(FMenuBuilder& MenuBuilder)
 	MenuBuilder.AddMenuEntry(
 		FText::FromString(TEXT("Launch Micro Manager")),
 		FText::FromString(TEXT("Opens the Micro Manager tool window.")),
-		FSlateIcon(),
+		FSlateIcon(FMicroManagerStyle::GetStyleSetName(), "ContentBrowser.MicroManager"),
 		FExecuteAction::CreateRaw(this, &FMicroManagerModule::OnMicroManagerClicked)
 	);
 
@@ -312,7 +313,9 @@ void FMicroManagerModule::FixUpRedirectors()
 void FMicroManagerModule::RegisterMicroManagerTab()
 {
 	// Register the custom editor tab
-	FGlobalTabmanager::Get()->RegisterTabSpawner(FName("Micro Manager"),FOnSpawnTab::CreateRaw(this, &FMicroManagerModule::OnSpawnMicroManagerTab)).SetDisplayName(FText::FromString(TEXT("MicroManager")));
+	FGlobalTabmanager::Get()->RegisterTabSpawner(FName("Micro Manager"),FOnSpawnTab::CreateRaw(this, &FMicroManagerModule::OnSpawnMicroManagerTab))
+	.SetDisplayName(FText::FromString(TEXT("MicroManager")))
+	.SetIcon(FSlateIcon(FMicroManagerStyle::GetStyleSetName(), "ContentBrowser.MicroManager"));
 }
 
 TSharedRef<SDockTab> FMicroManagerModule::OnSpawnMicroManagerTab(const FSpawnTabArgs& SpawnTabArgs)
