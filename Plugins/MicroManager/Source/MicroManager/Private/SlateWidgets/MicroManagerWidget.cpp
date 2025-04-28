@@ -355,36 +355,45 @@ TSharedRef<SButton> SMicroManagerTab::ConstructButtonForRowWidget(TSharedPtr<FAs
 }
 
 // Callback for the delete button click event
+/**
+ * Handles the click event for the delete button associated with an asset.
+ * This function deletes the specified asset and refreshes the asset list view to reflect the deletion.
+ *
+ * @param ClickedAssetData A shared pointer to the FAssetData of the asset to be deleted.
+ *                         This parameter represents the asset that the user has chosen to delete.
+ * 
+ * @return FReply::Handled() indicating that the event was handled successfully.
+ */
 FReply SMicroManagerTab::OnDeleteButtonClicked(TSharedPtr<FAssetData> ClickedAssetData)
 {
-	// Refreshes the List view to reflect the deletion by loading the module
-	FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
-	// Call the custom function to delete the clicked asset
-	// The TSharedPtr<FAssetData> assetData is passed to the custom function and converted to a raw pointer for deletion
-	const bool bAssetDeleted = MicroManagerModule.DeleteSingleAssetForAssetList(*ClickedAssetData.Get());
+    // Refreshes the List view to reflect the deletion by loading the module
+    FMicroManagerModule& MicroManagerModule = FModuleManager::LoadModuleChecked<FMicroManagerModule>(TEXT("MicroManager"));
+    // Call the custom function to delete the clicked asset
+    // The TSharedPtr<FAssetData> assetData is passed to the custom function and converted to a raw pointer for deletion
+    const bool bAssetDeleted = MicroManagerModule.DeleteSingleAssetForAssetList(*ClickedAssetData.Get());
 
-	// Refresh the asset list to reflect the deletion
-	if (bAssetDeleted)
-	{
-		// Update list source items
-		if (StoredAssetsData.Contains(ClickedAssetData))
-		{
-			StoredAssetsData.Remove(ClickedAssetData);
-			DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset: %s"), *ClickedAssetData->AssetName.ToString()));
-		}
+    // Refresh the asset list to reflect the deletion
+    if (bAssetDeleted)
+    {
+        // Update list source items
+        if (StoredAssetsData.Contains(ClickedAssetData))
+        {
+            StoredAssetsData.Remove(ClickedAssetData);
+            DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset: %s"), *ClickedAssetData->AssetName.ToString()));
+        }
 
-		if (DisplayedAssetsData.Contains(ClickedAssetData))
-		{
-			DisplayedAssetsData.Remove(ClickedAssetData);
+        if (DisplayedAssetsData.Contains(ClickedAssetData))
+        {
+            DisplayedAssetsData.Remove(ClickedAssetData);
             DebugHelper::PrintLog(FString::Printf(TEXT("Removed asset from displayed list: %s"), *ClickedAssetData->AssetName.ToString()));
-		}
-		
-		ConstructedAssetListView->RequestListRefresh();
+        }
+        
+        ConstructedAssetListView->RequestListRefresh();
 
-		DebugHelper::ShowNotifyInfo(FString::Printf(TEXT("Deleted asset: %s"), *ClickedAssetData->AssetName.ToString()));
-	}
+        DebugHelper::ShowNotifyInfo(FString::Printf(TEXT("Deleted asset: %s"), *ClickedAssetData->AssetName.ToString()));
+    }
 
-	return FReply::Handled();
+    return FReply::Handled();
 }
 #pragma endregion
 
