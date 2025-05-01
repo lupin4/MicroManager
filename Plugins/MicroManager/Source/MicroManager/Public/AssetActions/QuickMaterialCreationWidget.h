@@ -22,10 +22,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CreateMaterialFromSelectedTextures();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedtextures")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures")
 	FString MaterialName = TEXT("M_");
-	
-
 
 #pragma endregion 
 };

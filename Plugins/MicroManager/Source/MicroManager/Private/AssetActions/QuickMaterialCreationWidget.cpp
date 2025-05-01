@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-#include "DebugHelper.h"
 #include "AssetActions/QuickMaterialCreationWidget.h"
+#include "DebugHelper.h"
+
 
 #pragma region QuickMaterialCreationCore
 
