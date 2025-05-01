@@ -11,5 +11,13 @@
 #pragma endregion
 void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 {
-	DebugHelper::Print(TEXT("Creating material from selected textures..."), FColor::Cyan);
+	if (bCustomMaterialName)
+	{
+		if (MaterialName.IsEmpty() || MaterialName.Equals(TEXT("M_")))
+		{
+			DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("Please enter a valid material name."));
+			return;
+		}
+	}
+	//DebugHelper::Print(TEXT("Creating material from selected textures..."), FColor::Cyan);
 }
