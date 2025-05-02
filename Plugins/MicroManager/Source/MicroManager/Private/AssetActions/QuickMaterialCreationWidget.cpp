@@ -2,6 +2,9 @@
 #include "DebugHelper.h"
 #include "EditorAssetLibrary.h"
 #include "EditorUtilityLibrary.h"
+#include "AssetToolsModule.h"
+#include "Factories/MaterialFactoryNew.h"
+
 
 #pragma region QuickMaterialCreationCore
 	
@@ -23,6 +26,15 @@ void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 	if(!ProcessSelectedData(SelectedAssetsData, SelectedTexturesArray, SelectedTextureFolderPath)) return;
 
 	if(CheckIsNameUsed(SelectedTextureFolderPath, MaterialName)) return;
+
+	UMaterial* CreatedMaterial = CreateMaterialAsset(MaterialName,SelectedTextureFolderPath);
+
+	if(!CreatedMaterial)
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok,TEXT("Failed to create material"));
+		return;
+	}
+
 
 	DebugHelper::Print(SelectedTextureFolderPath,FColor::Cyan);
 }
@@ -95,6 +107,18 @@ const FString& MaterialNameToCheck)
 
 	return false;
 
+}
+
+UMaterial * UQuickMaterialCreationWidget::CreateMaterialAsset(const FString & NameOfTheMaterial, const FString & PathToPutMaterial)
+{	
+	FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+
+	UMaterialFactoryNew* MaterialFactory = NewObject<UMaterialFactoryNew>();
+
+	UObject* CreatedObject = AssetToolsModule.Get().CreateAsset(NameOfTheMaterial,PathToPutMaterial,
+	UMaterial::StaticClass(),MaterialFactory);
+
+	return Cast<UMaterial>(CreatedObject);
 }
 
 #pragma endregion
