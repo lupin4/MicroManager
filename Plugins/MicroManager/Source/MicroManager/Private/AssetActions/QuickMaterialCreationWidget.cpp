@@ -1,33 +1,30 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 #include "AssetActions/QuickMaterialCreationWidget.h"
-#include "EditorUtilityLibrary.h"
 #include "DebugHelper.h"
-
+#include "EditorUtilityLibrary.h"
 
 #pragma region QuickMaterialCreationCore
-
+	
 void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 {
-	if (bCustomMaterialName)
+	if(bCustomMaterialName)
 	{
-		if (MaterialName.IsEmpty() || MaterialName.Equals(TEXT("M_")))
+		if(MaterialName.IsEmpty() || MaterialName.Equals(TEXT("M_")))
 		{
-			DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("Please enter a valid material name."));
+			DebugHelper::ShowMsgDialog(EAppMsgType::Ok,TEXT("Please enter a valid name"));
 			return;
 		}
-
-		TArray<FAssetData> SelectedAssetData = UEditorUtilityLibrary::GetSelectedAssetData();
-		TArray<UTexture2D*> SelectedTexturesArray;
-		FString SelectedTextureFolderPath;
-		if (ProcessSelectedData(SelectedAssetData, SelectedTexturesArray, SelectedTextureFolderPath)) return;
 	}
-	//DebugHelper::Print(TEXT("Creating material from selected textures..."), FColor::Cyan);
+
+	TArray<FAssetData> SelectedAssetsData = UEditorUtilityLibrary::GetSelectedAssetData();
+	TArray<UTexture2D*> SelectedTexturesArray;
+	FString SelectedTextureFolderPath;
+
+	if(!ProcessSelectedData(SelectedAssetsData, SelectedTexturesArray, SelectedTextureFolderPath)) return;
+
+	DebugHelper::Print(SelectedTextureFolderPath,FColor::Cyan);
 }
 
-
-#pragma endregion
-
-#pragma region QuickMaterialCreation
+//Process the selected data, will filter out textures,and return false if non-texture selected
 bool UQuickMaterialCreationWidget::ProcessSelectedData(const TArray<FAssetData>& SelectedDataToProccess, 
 TArray<UTexture2D*>& OutSelectedTexturesArray, FString& OutSelectedTexturePackagePath)
 {
@@ -74,4 +71,5 @@ TArray<UTexture2D*>& OutSelectedTexturesArray, FString& OutSelectedTexturePackag
 
 	return true;
 }
+
 #pragma endregion
