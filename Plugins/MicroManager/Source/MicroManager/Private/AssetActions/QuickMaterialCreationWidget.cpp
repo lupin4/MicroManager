@@ -1,5 +1,6 @@
 #include "AssetActions/QuickMaterialCreationWidget.h"
 #include "DebugHelper.h"
+#include "EditorAssetLibrary.h"
 #include "EditorUtilityLibrary.h"
 
 #pragma region QuickMaterialCreationCore
@@ -20,6 +21,8 @@ void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 	FString SelectedTextureFolderPath;
 
 	if(!ProcessSelectedData(SelectedAssetsData, SelectedTexturesArray, SelectedTextureFolderPath)) return;
+
+	if(CheckIsNameUsed(SelectedTextureFolderPath, MaterialName)) return;
 
 	DebugHelper::Print(SelectedTextureFolderPath,FColor::Cyan);
 }
@@ -70,6 +73,28 @@ TArray<UTexture2D*>& OutSelectedTexturesArray, FString& OutSelectedTexturePackag
 	}
 
 	return true;
+}
+
+bool UQuickMaterialCreationWidget::CheckIsNameUsed(const FString& FolderPathToCheck, 
+const FString& MaterialNameToCheck)
+{
+	TArray<FString> ExistingAssetsPaths = UEditorAssetLibrary::ListAssets(FolderPathToCheck,false);
+
+	for(const FString& ExistingAssetPath:ExistingAssetsPaths)
+	{
+		const FString ExistingAssetName = FPaths::GetBaseFilename(ExistingAssetPath);
+
+		if(ExistingAssetName.Equals(MaterialNameToCheck))
+		{
+			DebugHelper::ShowMsgDialog(EAppMsgType::Ok,MaterialNameToCheck + 
+			TEXT(" is already used by asset"));
+
+			return true;
+		}
+	}
+
+	return false;
+
 }
 
 #pragma endregion
