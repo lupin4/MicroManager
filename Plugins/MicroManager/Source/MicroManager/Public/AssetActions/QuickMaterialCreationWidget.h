@@ -6,7 +6,7 @@
 #include "EditorUtilityWidget.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialExpressionTextureSample.h"
-
+#include "Materials/MaterialInstanceConstant.h"
 #include "QuickMaterialCreationWidget.generated.h"
 
 
@@ -38,6 +38,19 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures")
 	bool bCustomMaterialName = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures")
+	bool bCreateMaterialInstance = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures")
+	bool bUseMaterialParameters = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Master Material Settings", meta = (EditCondition = "bUseMaterialParameters"))
+	FLinearColor BaseColorTint = FLinearColor::White;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Master Material Settings", meta = (EditCondition = "bUseMaterialParameters"))
+	FName BaseColorParameterName = TEXT("BaseColorTexture");
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures", meta=(EditCondition="bCustomMaterialName"))
 	FString MaterialName = TEXT("M_");
@@ -116,5 +129,9 @@ private:
 
 
 #pragma endregion
+
+
 	
+	UMaterialInstanceConstant* CreateMaterialInstanceAsset(UMaterial* CreatedMaterial, FString MaterialInstanceName, const FString& PathToPutMI);  
+
 };

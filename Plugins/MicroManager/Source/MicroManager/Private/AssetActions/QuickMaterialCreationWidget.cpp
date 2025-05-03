@@ -7,6 +7,11 @@
 #include "EditorAssetLibrary.h"
 #include "AssetToolsModule.h"
 #include "Factories/MaterialFactoryNew.h"
+#include "Materials/MaterialInstanceConstant.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "Materials/MaterialExpressionMultiply.h"
+#include "Materials/MaterialExpressionTextureSampleParameter2D.h"
+#include "Materials/MaterialExpressionVectorParameter.h"
 
 #pragma region QuickMaterialCreationCore
 	
@@ -26,9 +31,9 @@ void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 	FString SelectedTextureFolderPath;
 	uint32 PinsConnectedCounter = 0;
 
-	if(!ProcessSelectedData(SelectedAssetsData, SelectedTexturesArray, SelectedTextureFolderPath)) return;
+	if(!ProcessSelectedData(SelectedAssetsData, SelectedTexturesArray, SelectedTextureFolderPath)) {MaterialName = TEXT("M_"); return;}
 	
-	if(CheckIsNameUsed(SelectedTextureFolderPath, MaterialName)) return;
+	if(CheckIsNameUsed(SelectedTextureFolderPath, MaterialName)) {MaterialName = TEXT("M_"); return;}
 
 	UMaterial* CreatedMaterial = CreateMaterialAsset(MaterialName,SelectedTextureFolderPath);
 
@@ -50,8 +55,13 @@ void UQuickMaterialCreationWidget::CreateMaterialFromSelectedTextures()
 		DebugHelper::ShowNotifyInfo(TEXT("Successfully connected ") 
 		+ FString::FromInt(PinsConnectedCounter) + (TEXT(" pins")));
 	}
-	MaterialName = TEXT("M_");
 	
+
+	if (bCreateMaterialInstance)
+	{
+		CreateMaterialInstanceAsset(CreatedMaterial, MaterialName, SelectedTextureFolderPath);
+	}
+	MaterialName = TEXT("M_");
 }
 
 //Process the selected data, will filter out textures,and return false if non-texture selected
@@ -145,14 +155,56 @@ UTexture2D * SelectedTexture, uint32 & PinsConnectedCounter)
 
 	if(!TextureSampleNode) return;
 
-	if(!CreatedMaterial->GetEditorOnlyData()->BaseColor.IsConnected())
+	if (!CreatedMaterial->GetEditorOnlyData()->BaseColor.IsConnected())
 	{
-		if(TryConnectBaseColor(TextureSampleNode,SelectedTexture,CreatedMaterial))
+		if (bUseMaterialParameters)
 		{
+			// Create Texture Parameter node
+			UMaterialExpressionTextureSampleParameter2D* TextureParam =
+				NewObject<UMaterialExpressionTextureSampleParameter2D>(CreatedMaterial);
+			TextureParam->ParameterName = BaseColorParameterName;
+			TextureParam->Texture = SelectedTexture;
+			TextureParam->SamplerType = SAMPLERTYPE_Color;
+			TextureParam->MaterialExpressionEditorX = -800;
+			TextureParam->MaterialExpressionEditorY = 0;
+
+			// Create Vector Tint Parameter node
+			UMaterialExpressionVectorParameter* TintParam =
+				NewObject<UMaterialExpressionVectorParameter>(CreatedMaterial);
+			TintParam->ParameterName = TEXT("BaseColorTint");
+			TintParam->DefaultValue = BaseColorTint;
+			TintParam->MaterialExpressionEditorX = -800;
+			TintParam->MaterialExpressionEditorY = -200;
+
+			// Multiply Texture * Tint
+			UMaterialExpressionMultiply* MultiplyNode =
+				NewObject<UMaterialExpressionMultiply>(CreatedMaterial);
+			MultiplyNode->MaterialExpressionEditorX = -400;
+			MultiplyNode->MaterialExpressionEditorY = -100;
+			MultiplyNode->A.Connect(0, TextureParam);
+			MultiplyNode->B.Connect(0, TintParam);
+
+			auto& Expressions = CreatedMaterial->GetEditorOnlyData()->ExpressionCollection.Expressions;
+			Expressions.Add(TextureParam);
+			Expressions.Add(TintParam);
+			Expressions.Add(MultiplyNode);
+
+			CreatedMaterial->GetEditorOnlyData()->BaseColor.Expression = MultiplyNode;
+			CreatedMaterial->PostEditChange();
+
 			PinsConnectedCounter++;
 			return;
 		}
+		else
+		{
+			if (TryConnectBaseColor(TextureSampleNode, SelectedTexture, CreatedMaterial))
+			{
+				PinsConnectedCounter++;
+				return;
+			}
+		}
 	}
+
 
 	if(!CreatedMaterial->GetEditorOnlyData()->Metallic.IsConnected())
 	{
@@ -366,5 +418,32 @@ bool UQuickMaterialCreationWidget::TryConnectORM(UMaterialExpressionTextureSampl
 	return false;
 }
 
-
 #pragma endregion
+
+UMaterialInstanceConstant* UQuickMaterialCreationWidget::CreateMaterialInstanceAsset(
+	UMaterial* CreatedMaterial, FString MaterialInstanceName, const FString& PathToPutMI)
+{
+	MaterialInstanceName.RemoveFromStart(TEXT("M_"));
+	MaterialInstanceName.InsertAt(0, TEXT("MI_"));
+
+	UMaterialInstanceConstantFactoryNew* MIFactoryNew = NewObject<UMaterialInstanceConstantFactoryNew>();
+
+	FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>(TEXT("AssetTools"));
+
+	UObject* CreatedObject = AssetToolsModule.Get().CreateAsset(
+		MaterialInstanceName,
+		PathToPutMI,
+		UMaterialInstanceConstant::StaticClass(),
+		MIFactoryNew);
+
+	if (UMaterialInstanceConstant* CreatedMI = Cast<UMaterialInstanceConstant>(CreatedObject))
+	{
+		CreatedMI->SetParentEditorOnly(CreatedMaterial);
+		CreatedMI->PostEditChange();
+		CreatedMaterial->PostEditChange();
+		return CreatedMI;
+	}
+
+	return nullptr;
+}
+
