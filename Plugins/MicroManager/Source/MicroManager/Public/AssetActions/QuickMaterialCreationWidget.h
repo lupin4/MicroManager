@@ -9,6 +9,16 @@
 
 #include "QuickMaterialCreationWidget.generated.h"
 
+
+UENUM(BlueprintType)
+enum class E_ChannelPackingType : uint8
+{
+	ECPT_NoChannelPacking UMETA (DisplayName = "No Channel Packing"),
+
+	ECPT_ORM UMETA (DisplayName = "OcclusionRoughnessMetallic"),
+
+	ECPT_MAX UMETA (DisplayName = "DefaultMAX")
+};
 /**
  * 
  */
@@ -16,12 +26,13 @@ UCLASS()
 class MICROMANAGER_API UQuickMaterialCreationWidget : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
-
 public:
 
-
 #pragma region QuickMaterialCreationCore
-
+	
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "CreateMaterialFromSelectedTextures")
+	E_ChannelPackingType ChannelPackingType = E_ChannelPackingType::ECPT_NoChannelPacking;
+	
 	UFUNCTION(BlueprintCallable)
 	void CreateMaterialFromSelectedTextures();
 
@@ -70,6 +81,12 @@ public:
 		TEXT("_AmbientOcclusionMap"),
 		TEXT("_AO")
 	};
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category = "Supported Texture Names")
+	TArray<FString> ORMArray = {
+		TEXT("_arm"),
+		TEXT("_OcclusionRoughnessMetallic"),
+		TEXT("_ORM")
+	};
 
 #pragma endregion
 
@@ -91,6 +108,12 @@ private:
 #pragma region CreateMaterialNodes
 
 	bool TryConnectBaseColor(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+	bool TryConnectMetalic(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+	bool TryConnectRoughness(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+	bool TryConnectNormal(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+	bool TryConnectAO(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+	bool TryConnectORM(UMaterialExpressionTextureSample* TextureSampleNode,UTexture2D* SelectedTexture,UMaterial* CreatedMaterial);
+
 
 #pragma endregion
 	
