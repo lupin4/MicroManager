@@ -12,6 +12,12 @@
 #include "Materials/MaterialExpressionMultiply.h"
 #include "Materials/MaterialExpressionTextureSampleParameter2D.h"
 #include "Materials/MaterialExpressionVectorParameter.h"
+#include "Factories/MaterialInstanceConstantFactoryNew.h"
+#include "EditorAssetLibrary.h"
+#include "AssetToolsModule.h"
+#include "EditorUtilityLibrary.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+
 
 #pragma region QuickMaterialCreationCore
 	
@@ -446,4 +452,57 @@ UMaterialInstanceConstant* UQuickMaterialCreationWidget::CreateMaterialInstanceA
 
 	return nullptr;
 }
+
+void UQuickMaterialCreationWidget::CreateMaterialInstanceFromSelectedMaterial()
+{
+	TArray<FAssetData> SelectedAssets = UEditorUtilityLibrary::GetSelectedAssetData();
+	uint32 NumCreated = 0;
+
+	for (const FAssetData& AssetData : SelectedAssets)
+	{
+		UMaterial* Material = Cast<UMaterial>(AssetData.GetAsset());
+		if (!Material)
+		{
+			DebugHelper::Print(TEXT("Selected asset is not a Material"), FColor::Red);
+			continue;
+		}
+
+		// Set up factory
+		UMaterialInstanceConstantFactoryNew* MICFactory = NewObject<UMaterialInstanceConstantFactoryNew>();
+		MICFactory->InitialParent = Material;
+
+		// Create asset path and name
+		const FString AssetName = FString::Printf(TEXT("MI_%s"), *Material->GetName().Replace(TEXT("M_"), TEXT("")));
+		const FString PackagePath = AssetData.PackagePath.ToString();
+		const FString AssetPath = FPaths::Combine(PackagePath, AssetName);
+
+		// Check if asset already exists
+		if (UEditorAssetLibrary::DoesAssetExist(AssetPath))
+		{
+			DebugHelper::Print(FString::Printf(TEXT("Material instance already exists: %s"), *AssetName), FColor::Yellow);
+			continue;
+		}
+
+		// Use AssetTools to create new asset
+		FAssetToolsModule& AssetToolsModule = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+		UObject* CreatedAsset = AssetToolsModule.Get().CreateAsset(AssetName, PackagePath, UMaterialInstanceConstant::StaticClass(), MICFactory);
+
+		if (CreatedAsset)
+		{
+			UEditorAssetLibrary::SaveAsset(CreatedAsset->GetPathName(), false);
+			DebugHelper::PrintLog(FString::Printf(TEXT("Created Material Instance: %s"), *CreatedAsset->GetPathName()));
+			++NumCreated;
+		}
+	}
+
+	if (NumCreated > 0)
+	{
+		DebugHelper::ShowNotifyInfo(FString::Printf(TEXT("Created %d Material Instance(s)"), NumCreated));
+	}
+	else
+	{
+		DebugHelper::ShowMsgDialog(EAppMsgType::Ok, TEXT("No Material Instances were created."));
+	}
+}
+
 

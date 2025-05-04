@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CreateMaterialFromSelectedTextures();
 
+	UFUNCTION(BlueprintCallable, Category="QuickMaterialCreation")
+	void CreateMaterialInstanceFromSelectedMaterial();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CreateMaterialFromSelectedTextures")
 	bool bCustomMaterialName = true;
 
