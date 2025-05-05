@@ -154,113 +154,138 @@ UMaterial * UQuickMaterialCreationWidget::CreateMaterialAsset(const FString & Na
 }
 
 void UQuickMaterialCreationWidget::Default_CreateMaterialNodes(UMaterial* CreatedMaterial, 
-UTexture2D * SelectedTexture, uint32 & PinsConnectedCounter)
+UTexture2D* SelectedTexture, uint32& PinsConnectedCounter)
 {
-	UMaterialExpressionTextureSample* TextureSampleNode =
-	NewObject<UMaterialExpressionTextureSample>(CreatedMaterial);
+	if (!SelectedTexture || !CreatedMaterial) return;
 
-	if(!TextureSampleNode) return;
-
-	if (!CreatedMaterial->GetEditorOnlyData()->BaseColor.IsConnected())
+	// If parameterized mode is active, always use parameterized nodes
+	if (bUseMaterialParameters)
 	{
-		if (bUseMaterialParameters)
+		FName ParamName = TEXT("TextureParam");
+
+		if (SelectedTexture->GetName().Contains(TEXT("Base")) || TryConnectBaseColor(nullptr, SelectedTexture, CreatedMaterial))
 		{
-			// Create Texture Parameter node
-			UMaterialExpressionTextureSampleParameter2D* TextureParam =
-				NewObject<UMaterialExpressionTextureSampleParameter2D>(CreatedMaterial);
-			TextureParam->ParameterName = BaseColorParameterName;
-			TextureParam->Texture = SelectedTexture;
-			TextureParam->SamplerType = SAMPLERTYPE_Color;
-			TextureParam->MaterialExpressionEditorX = -800;
-			TextureParam->MaterialExpressionEditorY = 0;
-
-			// Create Vector Tint Parameter node
-			UMaterialExpressionVectorParameter* TintParam =
-				NewObject<UMaterialExpressionVectorParameter>(CreatedMaterial);
-			TintParam->ParameterName = TEXT("BaseColorTint");
-			TintParam->DefaultValue = BaseColorTint;
-			TintParam->MaterialExpressionEditorX = -800;
-			TintParam->MaterialExpressionEditorY = -200;
-
-			// Multiply Texture * Tint
-			UMaterialExpressionMultiply* MultiplyNode =
-				NewObject<UMaterialExpressionMultiply>(CreatedMaterial);
-			MultiplyNode->MaterialExpressionEditorX = -400;
-			MultiplyNode->MaterialExpressionEditorY = -100;
-			MultiplyNode->A.Connect(0, TextureParam);
-			MultiplyNode->B.Connect(0, TintParam);
-
-			auto& Expressions = CreatedMaterial->GetEditorOnlyData()->ExpressionCollection.Expressions;
-			Expressions.Add(TextureParam);
-			Expressions.Add(TintParam);
-			Expressions.Add(MultiplyNode);
-
-			CreatedMaterial->GetEditorOnlyData()->BaseColor.Expression = MultiplyNode;
-			CreatedMaterial->PostEditChange();
-
-			PinsConnectedCounter++;
-			return;
+			ParamName = BaseColorParameterName;
 		}
-		else
+		else if (SelectedTexture->GetName().Contains(TEXT("Norm")))
 		{
-			if (TryConnectBaseColor(TextureSampleNode, SelectedTexture, CreatedMaterial))
+			ParamName = TEXT("Normal");
+		}
+		else if (SelectedTexture->GetName().Contains(TEXT("Rough")))
+		{
+			ParamName = TEXT("Roughness");
+		}
+		else if (SelectedTexture->GetName().Contains(TEXT("Metal")))
+		{
+			ParamName = TEXT("Metallic");
+		}
+		else if (SelectedTexture->GetName().Contains(TEXT("AO")))
+		{
+			ParamName = TEXT("AO");
+		}
+		else if (SelectedTexture->GetName().Contains(TEXT("ORM")) || SelectedTexture->GetName().Contains(TEXT("ARM")))
+		{
+			ParamName = TEXT("ORM");
+		}
+
+		UMaterialExpressionTextureSampleParameter2D* ParamNode = NewObject<UMaterialExpressionTextureSampleParameter2D>(CreatedMaterial);
+		ParamNode->ParameterName = ParamName;
+		ParamNode->Texture = SelectedTexture;
+		ParamNode->SamplerType = SAMPLERTYPE_Color;
+		ParamNode->MaterialExpressionEditorX = -800;
+		ParamNode->MaterialExpressionEditorY = PinsConnectedCounter * 300;
+
+		CreatedMaterial->GetEditorOnlyData()->ExpressionCollection.Expressions.Add(ParamNode);
+
+		// Auto-bind to likely material slot
+		if (ParamName == BaseColorParameterName)
+		{
+			// Optional: Apply tint multiply here if BaseColor
+			if (!BaseColorTint.Equals(FLinearColor::White))
 			{
-				PinsConnectedCounter++;
-				return;
+				UMaterialExpressionVectorParameter* TintParam = NewObject<UMaterialExpressionVectorParameter>(CreatedMaterial);
+				TintParam->ParameterName = TEXT("BaseColorTint");
+				TintParam->DefaultValue = BaseColorTint;
+				TintParam->MaterialExpressionEditorX = -1000;
+				TintParam->MaterialExpressionEditorY = ParamNode->MaterialExpressionEditorY - 200;
+
+				UMaterialExpressionMultiply* MultiplyNode = NewObject<UMaterialExpressionMultiply>(CreatedMaterial);
+				MultiplyNode->A.Connect(0, ParamNode);
+				MultiplyNode->B.Connect(0, TintParam);
+				MultiplyNode->MaterialExpressionEditorX = -600;
+				MultiplyNode->MaterialExpressionEditorY = ParamNode->MaterialExpressionEditorY - 100;
+
+				auto& Expressions = CreatedMaterial->GetEditorOnlyData()->ExpressionCollection.Expressions;
+				Expressions.Add(TintParam);
+				Expressions.Add(MultiplyNode);
+
+				CreatedMaterial->GetEditorOnlyData()->BaseColor.Expression = MultiplyNode;
+			}
+			else
+			{
+				CreatedMaterial->GetEditorOnlyData()->BaseColor.Expression = ParamNode;
 			}
 		}
-	}
-
-
-	if(!CreatedMaterial->GetEditorOnlyData()->Metallic.IsConnected())
-	{
-		if(TryConnectMetalic(TextureSampleNode, SelectedTexture, CreatedMaterial))
+		else if (ParamName == TEXT("Normal"))
 		{
-			PinsConnectedCounter++;
-			return;
+			ParamNode->SamplerType = SAMPLERTYPE_Normal;
+			CreatedMaterial->GetEditorOnlyData()->Normal.Expression = ParamNode;
 		}
-	}
-	
-	if(!CreatedMaterial->GetEditorOnlyData()->Roughness.IsConnected())
-	{
-		if(TryConnectRoughness(TextureSampleNode, SelectedTexture, CreatedMaterial))
+		else if (ParamName == TEXT("Roughness"))
 		{
-			PinsConnectedCounter++;
-			return;
+			SelectedTexture->SRGB = false;
+			SelectedTexture->CompressionSettings = TC_Default;
+			SelectedTexture->PostEditChange();
+			CreatedMaterial->GetEditorOnlyData()->Roughness.Expression = ParamNode;
 		}
-	}
-
-	if(!CreatedMaterial->GetEditorOnlyData()->Normal.IsConnected())
-	{
-		if(TryConnectNormal(TextureSampleNode, SelectedTexture, CreatedMaterial))
+		else if (ParamName == TEXT("Metallic"))
 		{
-			PinsConnectedCounter++;
-			return;
+			SelectedTexture->SRGB = false;
+			SelectedTexture->CompressionSettings = TC_Default;
+			SelectedTexture->PostEditChange();
+			CreatedMaterial->GetEditorOnlyData()->Metallic.Expression = ParamNode;
 		}
-	}
-
-	if(!CreatedMaterial->GetEditorOnlyData()->AmbientOcclusion.IsConnected())
-	{
-		if(TryConnectAO(TextureSampleNode, SelectedTexture, CreatedMaterial))
+		else if (ParamName == TEXT("AO"))
 		{
-			PinsConnectedCounter++;
-			return;
+			SelectedTexture->SRGB = false;
+			SelectedTexture->CompressionSettings = TC_Default;
+			SelectedTexture->PostEditChange();
+			CreatedMaterial->GetEditorOnlyData()->AmbientOcclusion.Expression = ParamNode;
 		}
-	}
-
-	if (!CreatedMaterial->GetEditorOnlyData()->Metallic.IsConnected() &&
-	!CreatedMaterial->GetEditorOnlyData()->Roughness.IsConnected() &&
-	!CreatedMaterial->GetEditorOnlyData()->AmbientOcclusion.IsConnected())
-	{
-		if (TryConnectORM(TextureSampleNode, SelectedTexture, CreatedMaterial))
+		else if (ParamName == TEXT("ORM"))
 		{
-			PinsConnectedCounter += 3; // because we connect 3 pins at once
-			return;
+			ParamNode->SamplerType = SAMPLERTYPE_Masks;
+			SelectedTexture->SRGB = false;
+			SelectedTexture->CompressionSettings = TC_Masks;
+			SelectedTexture->PostEditChange();
+
+			CreatedMaterial->GetEditorOnlyData()->AmbientOcclusion.Connect(0, ParamNode);
+			CreatedMaterial->GetEditorOnlyData()->Roughness.Connect(1, ParamNode);
+			CreatedMaterial->GetEditorOnlyData()->Metallic.Connect(2, ParamNode);
 		}
+
+		PinsConnectedCounter++;
+		CreatedMaterial->PostEditChange();
+		return;
 	}
 
+	// ---------- Non-parameterized fallback ----------
+	UMaterialExpressionTextureSample* TextureSampleNode = NewObject<UMaterialExpressionTextureSample>(CreatedMaterial);
+	if (!TextureSampleNode) return;
 
-	DebugHelper::Print(TEXT("Failed to connect the texture: ") + SelectedTexture->GetName(),FColor::Red);
+	if (TryConnectBaseColor(TextureSampleNode, SelectedTexture, CreatedMaterial) ||
+		TryConnectMetalic(TextureSampleNode, SelectedTexture, CreatedMaterial) ||
+		TryConnectRoughness(TextureSampleNode, SelectedTexture, CreatedMaterial) ||
+		TryConnectNormal(TextureSampleNode, SelectedTexture, CreatedMaterial) ||
+		TryConnectAO(TextureSampleNode, SelectedTexture, CreatedMaterial) ||
+		TryConnectORM(TextureSampleNode, SelectedTexture, CreatedMaterial))
+	{
+		PinsConnectedCounter++;
+	}
+	else
+	{
+		DebugHelper::Print(TEXT("Failed to connect texture: ") + SelectedTexture->GetName(), FColor::Red);
+	}
 }
 
 #pragma endregion
